@@ -8,24 +8,27 @@ import threading
 
 class block(object):
 
-    def __init__(self, index, previous_signed, data, public_key, private_key):
+    def __init__(self, index, previous_signed,  data, public_key, time_st=time.clock(), signed=None):
         self.index = index
         self.prev_signed = previous_signed
-        self.timestamp = time.clock()
+        self.timestamp = time_st
         self.data = data
         self.public_key = public_key
-        self.signed = self.create_hash(index, previous_signed, data, private_key)
-
-    def create_hash(self, index, prev_signature, data, private_key):
+        self.signed = signed
+        
+        
+    def create_hash(self, private_key):
+        if self.signed != None:
+            return self.signed
         print "making the HMAC for block"
         signer = HMAC.new(private_key)
         # create signature using index, data, previous_hash and private key
-        payload = str(index) + "-" + str(prev_signature) + "-" + str(data)
+        payload = str(self.index) + "_:_" + str(self.prev_signed) + "_:_" + str(self.data)
         signer.update(payload)
         return signer.hexdigest()
 
     def __repr__(self):
-        return str(self.index) + " - " + str(self.prev_signed) + " - " + str(self.timestamp) + " - " + str(self.data) + " - " + str(self.public_key) + " - " + str(self.signed)  
+        return str(self.index) + "_:_" + str(self.prev_signed) + "_:_" + str(self.timestamp) + "_:_" + str(self.data) + "_:_" + str(self.public_key) + "_:_" + str(self.signed)  
 
 
 class blockChain(object):
@@ -50,17 +53,19 @@ class blockChain(object):
 
 
     def gen_block(self, data):
-        blk =  block(self.blocks[-1].index + 1, self.blocks[-1].prev_signed, data, self.public_key, self.private_key)
-        print "making new block", blk
-        self.blocks.append(blk)
+        blk =  block(self.blocks[-1].index + 1, self.blocks[-1].prev_signed, data, self.public_key)
+        print "signing block"
+        blk.create_hash(self.private_key)
+        print "block is ready", blk
         return blk
 
     def send_block(self, block):
         print "Following block about to go out:", block
-        sent = self.sock_udp.sendto(str(block), self.udp_server_address)
-        print "block sent:",sent
+        sent = self.sock_udp.sendto("add_=_" + str(block), self.udp_server_address)
+        return sent
 
     def verify_block(self, block):
+        print "VERIFYING", block
         # TODO create_hash for block
         # compare to block hash
         # add block
@@ -109,7 +114,7 @@ class blockChain(object):
         self.get_peers()
         # send out registration block
         print "sending registration"
-        self.gen_block("Registration Request - ", self.public_key)
+        self.gen_block("register_=_", self.public_key)
         return True
 
     def make_first_block(self):
@@ -154,12 +159,19 @@ class blockChain(object):
             data_udp, address_udp = self.sock_udp.recvfrom(4096)
 
             print >> sys.stderr, 'received %s bytes from %s' % (len(data_udp), address_udp)
-             
-            data_set = data_udp.split('-')
-            if data_set[0] == "add - "" ":
-                
+            print "UDP data ---> ", data_udp 
+            data_set = data_udp.split('_=_')
+            if data_set[0] == "add":
+                #split up string and contain each field
+                blk_data = data_set[1].split('_:_')
+                #create block from data
+                blk = block(blk_data[0], blk_data[1], blk_data[2], blk_data[3], blk_data[4], blk_data[5])
+                #verify block
+                self.verify_block(blk)
+                #add block to blockchain
                 #sent = self.sock.sendto(data, address)
                 print "inside add", data_set
+                
 
 	    if data_set[0] == "register":
                 print "inside register", data_set
@@ -179,11 +191,14 @@ class blockChain(object):
             conn, address_tcp = self.sock_tcp.accept()
             data_tcp = conn.recv(4096).decode("ascii")               
             print data_tcp
-            data = data_tcp.split('-')
+            data = data_tcp.split('_=_')
             if data[0] == "add":
                 print "data to add", data[1]
                 block_to_send = self.gen_block(data[1])
-                self.send_block(block_to_send)
+                sent = self.send_block(block_to_send)
+                print "sent block size of:", str(sent)
+            if data[1] == "blocks":
+                print self.blocks
             
 
        
