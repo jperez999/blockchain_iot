@@ -5,7 +5,7 @@ from Crypto.Hash import SHA256
 from Crypto.Signature import pss
 import sys
 import threading
-
+import binascii
 
 class block(object):
 
@@ -20,15 +20,14 @@ class block(object):
         
     def create_hash(self, private_key):
         print "in block hash function..."
-        key = RSA.importKey(private_key.encode())
+        key = RSA.import_key(private_key.encode())
         if self.signed != None:
             return self.signed
         print "making the HMAC for block"
-        payload = str(self.index) + "_:_" + str(self.prev_signed) + "_:_" + str(self.data)
-        signer = SHA256.new(payload)
+        signer = SHA256.new(self.data.encode('utf8'))
         # create signature using index, data, previous_hash and private key
         # signer.update(payload.encode())
-        self.signed = pss.new(key).sign(signer)
+        self.signed = binascii.hexlify(pss.new(key).sign(signer))
 
     def __repr__(self):
         return '{\n\n "index": ' + str(self.index) + '\n\n"prev_signed": ' + str(self.prev_signed) + '\n\n "timestamp": ' + str(self.timestamp) + '\n\n"data": ' + str(self.data) + '\n\n"public_key": ' + str(self.public_key) + '\n\n"signature": ' + str(self.signed) + "\n\n}\n\n"  
@@ -65,7 +64,7 @@ class blockChain(object):
 
     def gen_block(self, data):
         print self.blocks
-        blk =  block(self.blocks[-1].index + 1, self.blocks[-1].signed, data, self.public_key)
+        blk =  block(int (self.blocks[-1].index) + 1, self.blocks[-1].signed, data, self.public_key)
         print "signing block"
         blk.create_hash(self.private_key)
         print "block is ready", blk
@@ -73,21 +72,26 @@ class blockChain(object):
 
     def send_block(self, block):
         print "Following block about to go out:", block
-        sent = self.sock_udp.sendto("add_=_" + str(block), self.udp_server_address)
-        return sent
+        if block:
+            print "sending block now..."
+            sent = self.sock_udp.sendto("add_=_" + str(block), self.udp_server_address)
+            return True
+        return False
 
     def verify_block(self, block):
         print "VERIFYING", block
-        key = RSA.importKey(block.public_key.encode())
+        key = RSA.import_key(block.public_key.encode())
         # TODO create_hash for block
-        payload = str(block.index) + "_:_" + str(block.prev_signed) + "_:_" + str(block.data)
-        hasher = SHA256.new(payload)
+        #payload = str(block.index) + "_:_" + str(block.data)
+        hasher = SHA256.new(block.data.encode('utf8'))
         v = pss.new(key.publickey())
         try:
-            v.verify(hasher, block.signed)
+            v.verify(hasher, block.signed.decode('hex'))
             print "VERIFY Success"
-        except:
-            print "FAILED Verify"
+            return True
+        except Exception as err:
+            print "FAILED Verify ", err
+            return False
             # compare to block hash
             # add block
         
@@ -155,7 +159,7 @@ class blockChain(object):
         data = self.extract_field("data", block_data)
         public_key = self.extract_field("public_key", block_data)
         signed = self.extract_field("signature", block_data)
-        print "extracted values for block", index, prev_signed, timestamp, signed
+        #print "extracted values for block", index, prev_signed, timestamp, signed
         return block(index, prev_signed, data, public_key, time_st=timestamp, signed=signed)
          
 
@@ -170,6 +174,16 @@ class blockChain(object):
                 res = line.split (': ')[-1]
                 #print res
                 return res
+
+    def consume_data(self, block):
+        data = block.data.split('_#_')
+        action = data[0]
+        content = data[1]
+        if action == "register":
+            print "adding peer: ", content
+            self.peers.append(content)
+        else:
+            print "did nothing for ", action, content
 
     def join(self):
         print "Joining the network..."
@@ -202,14 +216,20 @@ class blockChain(object):
             data_udp, address_udp = self.sock_udp.recvfrom(4096)
 
             print >> sys.stderr, 'received %s bytes from %s' % (len(data_udp), address_udp)
-            print "UDP data ---> ", data_udp 
+            print "UDP data ---> ", data_udp
+            data_udp = data_udp.decode('ascii') 
             data_set = data_udp.split('_=_')
+            if len(data_set) < 1:
+                break 
             if data_set[0] == "add": 
                 #split up string and contain each field
                 blk = self.extract_block(data_set[1])
                 #create block from data
                 #verify block
-                self.verify_block(blk)
+                ver = self.verify_block(blk)
+                if ver:
+                    self.blocks.append(blk)
+                    self.consume_data(blk)
                 #add block to blockchain
                 #sent = self.sock.sendto(data, address)
                 #print "inside add", data_set
@@ -239,12 +259,14 @@ class blockChain(object):
             data_tcp = conn.recv(4096).decode("ascii")               
             print data_tcp
             data = data_tcp.split('_=_')
+            if len(data) < 1:
+                break
             if data[0] == "add":
-                print "data to add", data[1]
-                block_to_send = self.gen_block(data[1])
+                print "data to add", type(str(data[1]))
+                block_to_send = self.gen_block("" + data[1])
                 sent = self.send_block(block_to_send)
                 print "sent block size of:", str(sent)
-            if data[1] == "blocks":
+            if data[0] == "blocks":
                 print self.blocks
             
 
