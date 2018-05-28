@@ -18,6 +18,7 @@ class block(object):
         
         
     def create_hash(self, private_key):
+        print "in block hash function..."
         if self.signed != None:
             return self.signed
         print "making the HMAC for block"
@@ -25,23 +26,24 @@ class block(object):
         # create signature using index, data, previous_hash and private key
         payload = str(self.index) + "_:_" + str(self.prev_signed) + "_:_" + str(self.data)
         signer.update(payload)
-        return signer.hexdigest()
+        self.signed = signer.hexdigest()
 
     def __repr__(self):
-        return str(self.index) + "_:_" + str(self.prev_signed) + "_:_" + str(self.timestamp) + "_:_" + str(self.data) + "_:_" + str(self.public_key) + "_:_" + str(self.signed)  
+        return '{\n "index": ' + str(self.index) + '\n"prev_signed": ' + str(self.prev_signed) + '\n "timestamp": ' + str(self.timestamp) + '\n"data": ' + str(self.data) + '\n"public_key": ' + str(self.public_key) + '\n"signed": ' + str(self.signed)  
 
 
 class blockChain(object):
     blocks = []
     peers = []
-    bc_k_file = "blockchain_key.pem"
+    master_file = "blockchain_key.pem"
+    bc_k_file = "user_bc_key.pem"
     udp_server_address = ('localhost', 10000)
     tcp_server_address = ('localhost', 9999)
 
     def __init__(self):
         self.sock_udp = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.sock_tcp = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        #self.blocks = self.make_first_block()
+        self.blocks.append(self.make_first_block())
         self.run()
         
     def refresh_blocks(self, blocks):
@@ -72,7 +74,7 @@ class blockChain(object):
         pass
 
     def get_peers(self):
-        self.peers.append(self.public_key)
+        self.sock_udp.sendto("peers_=_request", self.udp_server_address)
         return
 
     def verify_peer(self, public_key):
@@ -84,18 +86,18 @@ class blockChain(object):
             print "verification complete"
             return True
         print "adding key to peers list"
-        self.peers.append(public_key)
+        self.register()
         return True 
         
 
     def gen_blockchain_key(self):
         key = RSA.generate(2048)
-        private_key = key.export_key('PEM')
-        public_key  = key.publickey().export_key()
+        self.private_key = key.export_key('PEM')
+        self.public_key  = key.publickey().export_key()
         prK_file = open(self.bc_k_file, "w")
-        prK_file.write(private_key)
+        prK_file.write(self.private_key)
         prK_file.close()
-        return public_key
+        return self.public_key
 
     def get_key_pair(self):
         print "Looking for keys"
@@ -107,21 +109,33 @@ class blockChain(object):
             print "Key found!"
             return True
         except:
-            print "Failed to get keys"
+            print "Failed to get keys, creating..."
+            self.gen_blockchain_key()
             return False
 
     def register(self):
-        self.get_peers()
+        #self.get_peers()
         # send out registration block
         print "sending registration"
-        self.gen_block("register_=_", self.public_key)
+        self.gen_block("register_=_" + self.public_key)
         return True
 
     def make_first_block(self):
-        blk = block(0, 0, "base_block", self.public_key, self.private_key)
+        key = RSA.importKey(open(self.master_file, "rb").read())
+        blk = block(0, 0, "base_block", key.publickey().export_key())
+        blk.create_hash(key.export_key())
         self.blocks.append(blk)
+        print blk
         return True
 
+    def extract_block(self, block_data):
+        print "EXTRACT"
+        print block_data
+         
+        pass
+
+    def extract_list_blocks(self):
+        pass
 
     def join(self):
         print "Joining the network..."
@@ -139,15 +153,14 @@ class blockChain(object):
         return False
 
     def run(self):
-        #add join logic
-        self.join()
-	self.make_first_block()
-        #update block chain
-        #turn on blockchain
         udp = threading.Thread(target=self.udp_server)
         tcp = threading.Thread(target=self.tcp_server)
         udp.start()
-        tcp.start()
+        tcp.start() 
+        #add join logic
+        self.join()
+        #update block chain
+        #turn on blockchain
         pass
 
 
@@ -163,9 +176,8 @@ class blockChain(object):
             data_set = data_udp.split('_=_')
             if data_set[0] == "add":
                 #split up string and contain each field
-                blk_data = data_set[1].split('_:_')
+                blk = self.extract_block(data_set[1])
                 #create block from data
-                blk = block(blk_data[0], blk_data[1], blk_data[2], blk_data[3], blk_data[4], blk_data[5])
                 #verify block
                 self.verify_block(blk)
                 #add block to blockchain
@@ -174,12 +186,17 @@ class blockChain(object):
                 
 
 	    if data_set[0] == "register":
-                print "inside register", data_set
+                print "New member joining..."
                 self.peers.append(data_set[1])
-                print self.peers
+                print "new peer: " , self.peers[-1]
 
 	    if data_set[0] == "blocks":
-                print self.blocks
+                print "received blocks request, sending blocks..."
+                self.sock_udp.sendto("list_blocks_=_" + str(self.blocks), address_udp)
+
+            if data_set[0] == "peers":
+                print "received peer request, sending list..."
+                self.sock_udp.sendto("list_peers_=_" + str(self.peers),address_udp) 
 
 	
     def tcp_server(self):
