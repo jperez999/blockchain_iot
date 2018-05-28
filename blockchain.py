@@ -1,7 +1,8 @@
 import time
 import socket
 from Crypto.PublicKey import RSA
-from Crypto.Hash import HMAC
+from Crypto.Hash import SHA256
+from Crypto.Signature import pss
 import sys
 import threading
 
@@ -19,14 +20,15 @@ class block(object):
         
     def create_hash(self, private_key):
         print "in block hash function..."
+        key = RSA.importKey(private_key.encode())
         if self.signed != None:
             return self.signed
         print "making the HMAC for block"
-        signer = HMAC.new(private_key)
-        # create signature using index, data, previous_hash and private key
         payload = str(self.index) + "_:_" + str(self.prev_signed) + "_:_" + str(self.data)
-        signer.update(payload)
-        self.signed = signer.hexdigest()
+        signer = SHA256.new(payload)
+        # create signature using index, data, previous_hash and private key
+        # signer.update(payload.encode())
+        self.signed = pss.new(key).sign(signer)
 
     def __repr__(self):
         return '{\n\n "index": ' + str(self.index) + '\n\n"prev_signed": ' + str(self.prev_signed) + '\n\n "timestamp": ' + str(self.timestamp) + '\n\n"data": ' + str(self.data) + '\n\n"public_key": ' + str(self.public_key) + '\n\n"signature": ' + str(self.signed) + "\n\n}\n\n"  
@@ -76,10 +78,19 @@ class blockChain(object):
 
     def verify_block(self, block):
         print "VERIFYING", block
+        key = RSA.importKey(block.public_key.encode())
         # TODO create_hash for block
-        # compare to block hash
-        # add block
-        pass
+        payload = str(block.index) + "_:_" + str(block.prev_signed) + "_:_" + str(block.data)
+        hasher = SHA256.new(payload)
+        v = pss.new(key.publickey())
+        try:
+            v.verify(hasher, block.signed)
+            print "VERIFY Success"
+        except:
+            print "FAILED Verify"
+            # compare to block hash
+            # add block
+        
 
     def get_peers(self):
         self.sock_udp.sendto("peers_=_request", self.udp_server_address)
@@ -201,7 +212,7 @@ class blockChain(object):
                 self.verify_block(blk)
                 #add block to blockchain
                 #sent = self.sock.sendto(data, address)
-                print "inside add", data_set
+                #print "inside add", data_set
                 
 
 	    if data_set[0] == "register":
