@@ -29,7 +29,7 @@ class block(object):
         self.signed = signer.hexdigest()
 
     def __repr__(self):
-        return '{\n "index": ' + str(self.index) + '\n"prev_signed": ' + str(self.prev_signed) + '\n "timestamp": ' + str(self.timestamp) + '\n"data": ' + str(self.data) + '\n"public_key": ' + str(self.public_key) + '\n"signed": ' + str(self.signed)  
+        return '{\n\n "index": ' + str(self.index) + '\n\n"prev_signed": ' + str(self.prev_signed) + '\n\n "timestamp": ' + str(self.timestamp) + '\n\n"data": ' + str(self.data) + '\n\n"public_key": ' + str(self.public_key) + '\n\n"signature": ' + str(self.signed) + "\n\n}\n\n"  
 
 
 class blockChain(object):
@@ -41,25 +41,33 @@ class blockChain(object):
     tcp_server_address = ('localhost', 9999)
 
     def __init__(self):
+        #------------SERVERS INIT START-------------------
         self.sock_udp = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.sock_tcp = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        udp = threading.Thread(target=self.udp_server)
+        tcp = threading.Thread(target=self.tcp_server)
+        udp.start()
+        tcp.start() 
+        #-----------SERVER INIT COMPLETE -----------------
         self.blocks.append(self.make_first_block())
         self.run()
         
     def refresh_blocks(self, blocks):
+        print "REFRESH BLOCKS"
         # ask other peers for their chains
-        self.blocks = blocks
+        #self.blocks = blocks
         # compare response to your
         # take most current
         pass
 
 
     def gen_block(self, data):
-        blk =  block(self.blocks[-1].index + 1, self.blocks[-1].prev_signed, data, self.public_key)
+        print self.blocks
+        blk =  block(self.blocks[-1].index + 1, self.blocks[-1].signed, data, self.public_key)
         print "signing block"
         blk.create_hash(self.private_key)
         print "block is ready", blk
-        return blk
+        self.send_block(blk)
 
     def send_block(self, block):
         print "Following block about to go out:", block
@@ -116,26 +124,41 @@ class blockChain(object):
     def register(self):
         #self.get_peers()
         # send out registration block
-        print "sending registration"
-        self.gen_block("register_=_" + self.public_key)
+        print "creating registration block"
+        self.gen_block("register_#_" + self.public_key)
         return True
 
     def make_first_block(self):
         key = RSA.importKey(open(self.master_file, "rb").read())
         blk = block(0, 0, "base_block", key.publickey().export_key())
         blk.create_hash(key.export_key())
-        self.blocks.append(blk)
-        print blk
-        return True
+        #self.blocks.append(blk)
+        return blk
 
     def extract_block(self, block_data):
         print "EXTRACT"
-        print block_data
+        #print block_data
+        index = self.extract_field("index", block_data)
+        prev_signed = self.extract_field("prev_signed", block_data) 
+        timestamp = self.extract_field("timestamp", block_data)
+        data = self.extract_field("data", block_data)
+        public_key = self.extract_field("public_key", block_data)
+        signed = self.extract_field("signature", block_data)
+        print "extracted values for block", index, prev_signed, timestamp, signed
+        return block(index, prev_signed, data, public_key, time_st=timestamp, signed=signed)
          
-        pass
 
     def extract_list_blocks(self):
         pass
+
+    def extract_field(self, field_name, data):
+        sp_data = data.split('\n\n')
+        for line in sp_data:
+            if field_name in line:
+                #print field_name, line
+                res = line.split (': ')[-1]
+                #print res
+                return res
 
     def join(self):
         print "Joining the network..."
@@ -153,11 +176,7 @@ class blockChain(object):
         return False
 
     def run(self):
-        udp = threading.Thread(target=self.udp_server)
-        tcp = threading.Thread(target=self.tcp_server)
-        udp.start()
-        tcp.start() 
-        #add join logic
+       #add join logic
         self.join()
         #update block chain
         #turn on blockchain
@@ -174,7 +193,7 @@ class blockChain(object):
             print >> sys.stderr, 'received %s bytes from %s' % (len(data_udp), address_udp)
             print "UDP data ---> ", data_udp 
             data_set = data_udp.split('_=_')
-            if data_set[0] == "add":
+            if data_set[0] == "add": 
                 #split up string and contain each field
                 blk = self.extract_block(data_set[1])
                 #create block from data
