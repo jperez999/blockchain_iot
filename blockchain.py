@@ -55,11 +55,11 @@ class blockChain(object):
         
     def refresh_blocks(self, blocks):
         print "REFRESH BLOCKS"
+        print str(len(blocks)), blocks
         # ask other peers for their chains
-        #self.blocks = blocks
+        self.blocks = blocks
         # compare response to your
         # take most current
-        pass
 
 
     def gen_block(self, data):
@@ -99,6 +99,17 @@ class blockChain(object):
     def get_peers(self):
         self.sock_udp.sendto("peers_=_request", self.udp_server_address)
         return
+
+    def get_diff_peers(self, peers_list):
+        for peer in peers_list:
+            peer = peer.encode('utf8')
+            print peer
+            peer_content = peer.split('\n')[1] 
+            peer_content = peer_content.split('\n')[0]
+            if peer_content not in self.peers:
+                print "found new peer"
+                self.peers.append(peer)
+        print "done adding peers", self.peers
 
     def verify_peer(self, public_key):
         print "verifying key..."
@@ -152,7 +163,7 @@ class blockChain(object):
 
     def extract_block(self, block_data):
         print "EXTRACT"
-        #print block_data
+        print block_data
         index = self.extract_field("index", block_data)
         prev_signed = self.extract_field("prev_signed", block_data) 
         timestamp = self.extract_field("timestamp", block_data)
@@ -163,8 +174,16 @@ class blockChain(object):
         return block(index, prev_signed, data, public_key, time_st=timestamp, signed=signed)
          
 
-    def extract_list_blocks(self):
-        pass
+    def extract_list_blocks(self, data):
+        print "EXTRACTING LIST"
+        #print data
+        blocks = []
+        data_split =  data.split(',')
+        for obj in data_split:
+            blk = self.extract_block(obj)
+            if blk:
+                blocks.append(blk)
+        return blocks
 
     def extract_field(self, field_name, data):
         sp_data = data.split('\n\n')
@@ -246,8 +265,22 @@ class blockChain(object):
 
             if data_set[0] == "peers":
                 print "received peer request, sending list..."
-                self.sock_udp.sendto("list_peers_=_" + str(self.peers),address_udp) 
+                self.sock_udp.sendto("list_peers_=_" + str(self.peers),address_udp)
+            if data_set[0] == "list_blocks":
+                print "received list of blocks..."
+                list_blocks = self.extract_list_blocks(data_set[1])
+                self.refresh_blocks(list_blocks) 
 
+            if data_set[0] == "list_peers":
+                print "received list of peers"
+                target = data_set[1].split('[')[1]
+                target = target.split(']')[0]
+                peers = []
+                if len(target) > 1:
+                    peers = target.split(',')
+                else:
+                    peers.append(target.encode('utf-8'))
+                self.get_diff_peers(peers)
 	
     def tcp_server(self):
         print >>sys.stderr, 'starting up on %s port %s' % self.tcp_server_address
@@ -261,13 +294,16 @@ class blockChain(object):
             data = data_tcp.split('_=_')
             if len(data) < 1:
                 break
-            if data[0] == "add":
+            if data[0] == "add1":
                 print "data to add", type(str(data[1]))
-                block_to_send = self.gen_block("" + data[1])
+                block_to_send = self.gen_block('test_#_test')
                 sent = self.send_block(block_to_send)
                 print "sent block size of:", str(sent)
             if data[0] == "blocks":
-                print self.blocks
+                sent = self.sock_udp.sendto("blocks_=_request", self.udp_server_address)
+                print "sent blocks signal", sent
+            if data[0] == "peers":
+                sent = self.sock_udp.sendto("peers_=_request", self.udp_server_address)
             
 
        
