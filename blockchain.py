@@ -6,6 +6,7 @@ from Crypto.Signature import pss
 import sys
 import threading
 import binascii
+import string
 
 class block(object):
 
@@ -305,7 +306,11 @@ class blockChain(object):
                 break
             if data[0] == "add1":
                 print "data to add", type(str(data[1]))
-                block_to_send = self.gen_block('test_#_test')
+                #block_to_send = self.gen_block('test...test')
+                valid_characters = string.ascii_letters + string.digits + string.punctuation
+                tar = "".join(ch for ch in str(data[1]) if ch in valid_characters)
+                print tar
+                block_to_send = self.gen_block(tar)
                 sent = self.send_block(block_to_send)
                 print "sent block size of:", str(sent)
             if data[0] == "blocks":
