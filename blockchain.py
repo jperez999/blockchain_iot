@@ -212,7 +212,7 @@ class blockChain(object):
 
     def join(self):
         print "Joining the network..."
-        
+        self.sock_udp.sendto('blocks_=_req', self.broadcast)
         if not self.get_key_pair():
             print "Couldn't find your keys"
             print "register complete in join"
