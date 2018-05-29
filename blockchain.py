@@ -70,11 +70,11 @@ class blockChain(object):
         blk =  block(int (self.blocks[-1].index) + 1, self.blocks[-1].signed, data, self.public_key)
         print "signing block"
         blk.create_hash(self.private_key)
-        print "block is ready", blk
+        #print "block is ready", blk
         self.send_block(blk)
 
     def send_block(self, block):
-        print "Following block about to go out:", block
+        #print "Following block about to go out:", block
         if block:
             print "sending block now..."
             sent = self.sock_udp.sendto("add_=_" + str(block), self.broadcast)
@@ -82,7 +82,7 @@ class blockChain(object):
         return False
 
     def verify_block(self, block):
-        print "VERIFYING", block
+        #print "VERIFYING", block
         if int(block.index) != int(self.blocks[-1].index) + 1:
             print "block incorrect index, consider refresh blocks"
             return
@@ -109,7 +109,7 @@ class blockChain(object):
     def get_diff_peers(self, peers_list):
         for peer in peers_list:
             peer = peer.encode('utf8')
-            print peer
+            #print peer
             peer_content = peer.split('\n')[1] 
             peer_content = peer_content.split('\n')[0]
             if peer_content not in self.peers:
