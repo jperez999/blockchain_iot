@@ -67,7 +67,7 @@ class blockChain(object):
 
     def gen_block(self, data):
         print self.blocks
-        blk =  block(int (self.blocks[-1].index) + 1, self.blocks[-1].signed, data, self.public_key)
+        blk = block(int (self.blocks[-1].index) + 1, self.blocks[-1].signed, data, self.public_key)
         print "signing block"
         blk.create_hash(self.private_key)
         #print "block is ready", blk
@@ -169,7 +169,7 @@ class blockChain(object):
 
     def extract_block(self, block_data):
         print "EXTRACT"
-        print block_data
+        #print block_data
         index = self.extract_field("index", block_data)
         prev_signed = self.extract_field("prev_signed", block_data) 
         timestamp = self.extract_field("timestamp", block_data)
