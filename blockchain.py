@@ -83,6 +83,9 @@ class blockChain(object):
 
     def verify_block(self, block):
         print "VERIFYING", block
+        if int(block.index) != int(self.blocks[-1].index) + 1:
+            print "block incorrect index, consider refresh blocks"
+            return
         key = RSA.import_key(block.public_key.encode())
         # TODO create_hash for block
         #payload = str(block.index) + "_:_" + str(block.data)
@@ -209,14 +212,15 @@ class blockChain(object):
 
     def join(self):
         print "Joining the network..."
+        
         if not self.get_key_pair():
             print "Couldn't find your keys"
-            self.register()
             print "register complete in join"
             self.get_peers()
             print "peers list complete in join"
             self.refresh_blocks()
             print "refresh blocks complete in join"
+            self.register()
         if self.verify_peer(self.public_key):
             print "Found keys, verify OK!"
             return True
