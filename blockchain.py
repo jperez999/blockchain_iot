@@ -24,7 +24,8 @@ class block(object):
         if self.signed != None:
             return self.signed
         print "making the HMAC for block"
-        signer = SHA256.new(self.data.encode('utf8'))
+        payload = str(self.data) + str(self.prev_signed) + str(self.index) + str(self.timestamp)
+        signer = SHA256.new(payload.encode('utf8'))
         # create signature using index, data, previous_hash and private key
         # signer.update(payload.encode())
         self.signed = binascii.hexlify(pss.new(key).sign(signer))
@@ -89,7 +90,8 @@ class blockChain(object):
         key = RSA.import_key(block.public_key.encode())
         # TODO create_hash for block
         #payload = str(block.index) + "_:_" + str(block.data)
-        hasher = SHA256.new(block.data.encode('utf8'))
+        payload = str(block.data) + str(block.prev_signed) + str(block.index) + str(block.timestamp)
+        hasher = SHA256.new(payload.encode('utf8'))
         v = pss.new(key.publickey())
         try:
             v.verify(hasher, block.signed.decode('hex'))
