@@ -38,13 +38,16 @@ class blockChain(object):
     peers = []
     master_file = "blockchain_key.pem"
     bc_k_file = "user_bc_key.pem"
-    udp_server_address = ('localhost', 10000)
+    udp_server_address = ('', 10000)
     tcp_server_address = ('localhost', 9999)
+    broadcast = ('255.255.255.255', 10000)
 
     def __init__(self):
         #------------SERVERS INIT START-------------------
         self.sock_udp = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.sock_tcp = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.sock_udp.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        self.sock_udp.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
         udp = threading.Thread(target=self.udp_server)
         tcp = threading.Thread(target=self.tcp_server)
         udp.start()
@@ -74,7 +77,7 @@ class blockChain(object):
         print "Following block about to go out:", block
         if block:
             print "sending block now..."
-            sent = self.sock_udp.sendto("add_=_" + str(block), self.udp_server_address)
+            sent = self.sock_udp.sendto("add_=_" + str(block), self.broadcast)
             return True
         return False
 
@@ -300,10 +303,10 @@ class blockChain(object):
                 sent = self.send_block(block_to_send)
                 print "sent block size of:", str(sent)
             if data[0] == "blocks":
-                sent = self.sock_udp.sendto("blocks_=_request", self.udp_server_address)
+                sent = self.sock_udp.sendto("blocks_=_request", self.broadcast)
                 print "sent blocks signal", sent
             if data[0] == "peers":
-                sent = self.sock_udp.sendto("peers_=_request", self.udp_server_address)
+                sent = self.sock_udp.sendto("peers_=_request", self.broadcast)
             
 
        
