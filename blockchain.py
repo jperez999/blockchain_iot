@@ -10,7 +10,6 @@ from Crypto.Signature import pss
 
 log = logging.getLogger()
 
-
 class block(object):
 
     def __init__(self, index, previous_signed,  data, public_key,
@@ -35,8 +34,18 @@ class block(object):
         # signer.update(payload.encode())
         self.signed = pss.new(key).sign(signer).hex()
 
+    # def __repr__(self):
+    #     return '{\n\n "index": ' + str(self.index) + '\n\n"prev_signed": ' + str(self.prev_signed) + '\n\n "timestamp": ' + str(self.timestamp) + '\n\n"data": ' + str(self.data) + '\n\n"public_key": ' + str(self.public_key) + '\n\n"signature": ' + str(self.signed) + "\n\n}\n\n"
+
     def __repr__(self):
-        return '{\n\n "index": ' + str(self.index) + '\n\n"prev_signed": ' + str(self.prev_signed) + '\n\n "timestamp": ' + str(self.timestamp) + '\n\n"data": ' + str(self.data) + '\n\n"public_key": ' + str(self.public_key) + '\n\n"signature": ' + str(self.signed) + "\n\n}\n\n"
+        res = {}
+        res['index'] = int(self.index),
+        res['prev_signed'] = self.prev_signed,
+        res['timestamp'] = self.timestamp,
+        res['data'] = self.data,
+        res['public_key'] = str(self.public_key),
+        res['signature'] = str(self.signed)
+        return json.dumps(res)
 
 
 class blockChain(object):
@@ -54,13 +63,6 @@ class blockChain(object):
         self.get_key_pair()
         blk = self.make_first_block()
         self.add_block(blk)
-        blk2 = self.gen_block('register', f'{args.my_topic}_|_{args.my_ip}_|_{self.get_key_pair()}')
-        log.info('registering')
-        if self.verify_block(blk2):
-            self.add_block(blk2)
-        blk3 = self.gen_block('oracle', f'I am oracle: {args.my_topic}')
-        if self.verify_block(blk3):
-            self.add_block(blk3)
 
     @staticmethod
     def get_instance():
@@ -161,16 +163,33 @@ class blockChain(object):
     def extract_block(self, block_data):
         log.info("EXTRACT")
         # log.info block_data
-        index = self.extract_field("index", block_data)
-        prev_signed = self.extract_field("prev_signed", block_data) 
-        timestamp = self.extract_field("timestamp", block_data)
-        data = self.extract_field("data", block_data)
-        public_key = self.extract_field("public_key", block_data)
+        log.info(block_data)
+        blk_dict = json.loads(block_data)
+        index = blk_dict["index"][0]
+        prev_signed = blk_dict["prev_signed"][0]
+        timestamp = blk_dict["timestamp"][0]
+        data = blk_dict["data"][0]
+        public_key = blk_dict["public_key"][0]
         log.info(public_key)
-        signed = self.extract_field("signature", block_data)
+        signed = blk_dict["signature"]
         # log.info "extracted values for block", index, prev_signed, timestamp, signed
         return block(index, prev_signed, data, public_key, time_st=timestamp,
                      signed=signed)
+
+    # def extract_block(self, block_data):
+    #     log.info("EXTRACT")
+    #     # log.info block_data
+    #     blk_dict = json.loads(block_data)
+    #     index = self.extract_field("index", block_data)
+    #     prev_signed = self.extract_field("prev_signed", block_data)
+    #     timestamp = self.extract_field("timestamp", block_data)
+    #     data = self.extract_field("data", block_data)
+    #     public_key = self.extract_field("public_key", block_data)
+    #     log.info(public_key)
+    #     signed = self.extract_field("signature", block_data)
+    #     # log.info "extracted values for block", index, prev_signed, timestamp, signed
+    #     return block(index, prev_signed, data, public_key, time_st=timestamp,
+    #                  signed=signed)
 
     def extract_list_blocks(self, data):
         log.info("EXTRACTING LIST")
@@ -191,13 +210,3 @@ class blockChain(object):
                 res = line.split(': ')[-1]
                 # log.info res
                 return res
-
-    def consume_data(self, block):
-        data = block.data.split('_#_')
-        action = data[0]
-        content = data[1]
-        if action == "register":
-            log.info("adding peer: %s" % content)
-            self.peers.append(content)
-        else:
-            log.info("did nothing for %s" % action, content)

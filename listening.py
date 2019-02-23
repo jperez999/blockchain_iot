@@ -8,14 +8,15 @@ log = logging.getLogger()
 
 
 def oracle(payload):
+    stat_info = StateInfo.get_instance()
     action, value = payload.split('|_|')
     if action == 'I am oracle':
         log.info('new oracle %s', value)
-        StateInfo.set_current_oracle(value)
+        stat_info.set_current_oracle(value)
         # update the new oracle topic
     elif action == 'new oracle':
         log.info('looking for oracle, broadcasters last known: %s', value)
-        StateInfo.get_current_oracle()
+        log.info('current oracle: %s', stat_info.get_current_oracle())
         # check if I have been select
         # if i was selected send I am oracle out
         # 
@@ -51,11 +52,12 @@ def vote(payload):
 
 
 def reg_user(payload):
+    zmq_soc = ZMQ_Soc.get_instance()
     action, value = payload.split('|_|')
     topic, ip, pkey = value.split('_|_')
     if action == 'hello':
         log.info('new user')
-        ZMQ_Soc.add_subscription(ip, topic, pkey)
+        zmq_soc.add_subscription(ip, topic, pkey)
     if action == 'bad':
         log.info('bad user')
     if action == 'bye':
@@ -84,7 +86,7 @@ def consume(block):
 
 def first_man():
     bc = blockChain.get_instance()
-    blk2 = bc.gen_block('register', f'hello|_|{args.my_topic}_|_{args.my_ip}_|_{self.get_key_pair()}')
+    blk2 = bc.gen_block('register', f'hello|_|{args.my_topic}_|_{args.my_ip}_|_{bc.get_key_pair()}')
     log.info('registering')
     if bc.verify_block(blk2):
         consume(blk2)
@@ -102,10 +104,12 @@ def main_listen_loop():
         messagedata = str(socket.recv())
         # split and process message data, topic 
         topic, block = messagedata.split('#_|_#')
-        blk = bc.extract_block(block)
+        blk = bc.extract_block(block[:-1])
         log.info('block: %s' % blk)
-        if bc.verify_block(blk):
+        if bc.verify_block(blk) and int(blk.index) == len(bc.blocks):
             consume(blk)
             # process block
             # add block
             # echo block
+        else:
+            log.error('block dropped: %s', blk)

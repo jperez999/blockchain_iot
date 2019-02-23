@@ -110,6 +110,19 @@ class StateInfo(object):
     current_oracle = None
     # block number
     current_block = 0
+    instance = None
+
+    def __init__(self):
+        if StateInfo.instance:
+            log.info('this is a singleton')
+        else:
+            StateInfo.instance = self
+
+    @staticmethod
+    def get_instance():
+        if not StateInfo.instance:
+            StateInfo()
+        return StateInfo.instance
 
     def get_current_vote(self):
         return self.current_vote

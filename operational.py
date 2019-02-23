@@ -63,7 +63,6 @@ def send_get_data():
     # create block
     # send block
     bc = blockChain.get_instance()
-    bq = BlockQueue.get_instance()
     gen_block = bc.gen_block('register', f'hello|_|{args.my_topic}_|_{args.my_ip}_|_{bc.get_key_pair()}')
     broadcast(str(gen_block))
     # bq.add_block(str(gen_block))
@@ -76,7 +75,8 @@ def peers():
 
 if __name__ == "__main__":
     cmd_args = parse_args()
-    if not cmd_args.ip:
+    log.info(cmd_args)
+    if not cmd_args.node_ip:
         first_man()
     thd = threading.Thread(target=main_listen_loop).start()
     app.run(host='0.0.0.0', port=9999, use_debugger=False)
