@@ -1,5 +1,6 @@
 import sys
 import json
+import time
 import logging
 import threading
 import block_args as args
@@ -27,6 +28,13 @@ def parse_args():
     return parser.parse_args()
 
 
+def add_new_user(con_str, topic, p_key):
+    time.sleep(2)
+    bc = blockChain.get_instance()
+    zmq_obj = ZMQ_Soc.get_instance()
+    gen_block = bc.gen_block('register', f'hello|_|{topic}_|_{con_str}_|_{p_key}')
+    zmq_obj.broadcast(str(gen_block))
+
 app = Flask(__name__)
 app.debug = False
 
@@ -42,6 +50,8 @@ def join():
     # take info 
     data = request.json
     log.info(data)
+    threading.Thread(target=add_new_user, 
+                     args=(data['con_str'], data['topic'], data['p_key']))
     return str(blockChain.blocks)
 
 
