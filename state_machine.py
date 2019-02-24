@@ -1,9 +1,7 @@
-import sys
 import zmq
 import block_args as args
 import logging
 import queue
-from blockchain import blockChain
 
 log = logging.getLogger()
 
@@ -33,7 +31,6 @@ class ZMQ_Soc:
     def get_sub_sock(self):
         if not self.sub_socket:
             self.sub_socket = self.context.socket(zmq.SUB)
-            self.add_subscription(args.my_ip, args.my_topic, blockChain().get_key_pair())
         return self.sub_socket
 
     def get_pub_sock(self):
@@ -43,10 +40,22 @@ class ZMQ_Soc:
         return self.pub_socket
 
     def add_subscription(self, con_str, topic, p_key):
+        new_rec = self.create_sub_tuple(con_str, topic, p_key)
+        if self.rec_dup_check(new_rec):
+            return False
         self.sub_socket.connect("tcp://%s:%s" % (con_str, args.port))
         self.sub_socket.setsockopt(zmq.SUBSCRIBE, topic.encode())
-        self.sub_list.append(self.create_sub_tuple(con_str, topic, p_key))
+        self.sub_list.append(new_rec)
         log.info('added this ip %s', (con_str, args.port, topic))
+        return True
+
+    def rec_dup_check(self, new_rec):
+        for rec in self.sub_list:
+            if new_rec['connect'] == rec['connect'] or\
+               new_rec['p_key'] == rec['p_key']:
+                log.info('record found!')
+                return True
+        return False
 
     def create_sub_tuple(self, con_str, topic, p_key):
         req = {}
@@ -63,6 +72,12 @@ class ZMQ_Soc:
                 self.sub_socket.setsockopt(zmq.UNSUBSCRIBE, topic)
                 return True
         return False
+
+    def broadcast(self, payload):
+        log.info('setting payload to queue...')
+        sock = self.get_pub_sock()
+        payload = args.my_topic + '#_|_#' + payload
+        sock.send(payload.encode())
 
 
 class BlockQueue(object):
@@ -101,49 +116,3 @@ class BlockQueue(object):
         return self.block_queue.qsize
 
 
-class StateInfo(object):
-    # vote number (i.e. seq id)
-    current_vote = 0
-    # vote status open(True)/closed(False)
-    vote_live = False
-    # the identifier for the node (i.e. subscription topic)
-    current_oracle = None
-    # block number
-    current_block = 0
-    instance = None
-
-    def __init__(self):
-        if StateInfo.instance:
-            log.info('this is a singleton')
-        else:
-            StateInfo.instance = self
-
-    @staticmethod
-    def get_instance():
-        if not StateInfo.instance:
-            StateInfo()
-        return StateInfo.instance
-
-    def get_current_vote(self):
-        return self.current_vote
-
-    def set_current_vote(self, vote_num):
-        self.current_vote = vote_num
-    
-    def get_vote_live(self):
-        return self.vote_live
-
-    def set_vote_live(self, status):
-        self.vote_live = status
-
-    def get_current_oracle(self):
-        return self.current_oracle
-
-    def set_current_oracle(self, oracle):
-        self.current_vote = oracle
-
-    def get_current_block(self):
-        return self.current_block
-
-    def set_current_block(self, block_num):
-        self.current_block = block_num

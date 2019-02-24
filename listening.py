@@ -1,5 +1,6 @@
-from state_machine import ZMQ_Soc, StateInfo
+from state_machine import ZMQ_Soc
 import logging
+import requests
 from blockchain import blockChain
 import block_args as args
 import json
@@ -7,81 +8,17 @@ import json
 log = logging.getLogger()
 
 
-def oracle(payload):
-    stat_info = StateInfo.get_instance()
-    action, value = payload.split('|_|')
-    if action == 'I am oracle':
-        log.info('new oracle %s', value)
-        stat_info.set_current_oracle(value)
-        # update the new oracle topic
-    elif action == 'new oracle':
-        log.info('looking for oracle, broadcasters last known: %s', value)
-        log.info('current oracle: %s', stat_info.get_current_oracle())
-        # check if I have been select
-        # if i was selected send I am oracle out
-        # 
-    log.info("oracle %s", (action, value))
-
-
-def data(payload):
-    action, value = payload.split('|_|')
-    log.info("data %s", (action, value))
-
-
-def vote(payload):
-    action, value = payload.split('|_|')
-    if action == 'open':
-        log.info('vote open')
-        StateInfo.set_current_vote(value)
-        StateInfo.set_vote_live(True)
-        # vote status changed to open
-        # check index in value
-        # check if have something to add
-        # if something, send stub 
-    elif action == 'close':
-        log.info('close vote')
-        StateInfo.set_vote_live(False)
-        value.split('_|_')
-        # vote status changed to closed
-    elif action == 'results':
-        log.info('results from vote')
-        broad_list = json.loads(value)
-        # vote results replace current broadcast
-        # if something sent, check for my number
-    log.info("vote %s", (action, value))
-
-
-def reg_user(payload):
-    zmq_soc = ZMQ_Soc.get_instance()
-    action, value = payload.split('|_|')
-    topic, ip, pkey = value.split('_|_')
-    if action == 'hello':
-        log.info('new user')
-        zmq_soc.add_subscription(ip, topic, pkey)
-    if action == 'bad':
-        log.info('bad user')
-    if action == 'bye':
-        log.info('user leaving')
-    log.info("register %s", (action, value))
-
-
-def consume(block):
+def join_up(node_ip):
     bc = blockChain.get_instance()
-    data = block.data
-    fltr, payload = data.split('|_#_|')
-    if fltr == 'oracle':
-        oracle(payload)
-    elif fltr == 'data':
-        data(payload)
-    elif fltr == 'vote':
-        vote(payload)
-    elif fltr == 'register':
-        reg_user(payload)
-    else:
-        log.error('dropping packet unknown action: %s', fltr)
-        return None
-    bc.add_block(block)
-    # echo block
+    endpoint = f'{node_ip}:9999/join'
+    payload = {
+        'con_str': args.my_ip,
+        'topic': args.my_topic,
+        'p_key': bc.get_key_pair()
+    }
+    res = requests.post(endpoint, data=json.dumps(payload))
+    log.info(res.json())
+    bc.extract_list_blocks(res.json())
 
 
 def first_man():
@@ -89,27 +26,27 @@ def first_man():
     blk2 = bc.gen_block('register', f'hello|_|{args.my_topic}_|_{args.my_ip}_|_{bc.get_key_pair()}')
     log.info('registering')
     if bc.verify_block(blk2):
-        consume(blk2)
+        bc.consume(blk2)
     blk3 = bc.gen_block('oracle', f'I am oracle|_|{args.my_topic}')
     if bc.verify_block(blk3):
-        consume(blk3)
+        bc.consume(blk3)
 
 
 def main_listen_loop():
     log.info("listening")
     bc = blockChain.get_instance()
-    socket = ZMQ_Soc.get_instance().get_sub_sock()
-
+    zmq_obj = ZMQ_Soc.get_instance()
+    socket = zmq_obj.get_sub_sock()
     while True:
         messagedata = str(socket.recv())
         # split and process message data, topic 
         topic, block = messagedata.split('#_|_#')
-        blk = bc.extract_block(block[:-1])
-        log.info('block: %s' % blk)
-        if bc.verify_block(blk) and int(blk.index) == len(bc.blocks):
-            consume(blk)
+        blk = bc.extract_block(block)
+        if int(blk.index) == len(bc.blocks) and bc.verify_block(blk):
+            if bc.consume(blk):
+                zmq_obj.broadcast(block)
             # process block
             # add block
             # echo block
         else:
-            log.error('block dropped: %s', blk)
+            log.error('block dropped: %s', blk.index)

@@ -1,14 +1,15 @@
 import time
 import json
-import binascii
 import logging
 import block_args as args
+from state_machine import ZMQ_Soc
 from Crypto.PublicKey import RSA
 from Crypto.Hash import SHA256
 from Crypto.Signature import pss
 
 
 log = logging.getLogger()
+
 
 class block(object):
 
@@ -34,18 +35,8 @@ class block(object):
         # signer.update(payload.encode())
         self.signed = pss.new(key).sign(signer).hex()
 
-    # def __repr__(self):
-    #     return '{\n\n "index": ' + str(self.index) + '\n\n"prev_signed": ' + str(self.prev_signed) + '\n\n "timestamp": ' + str(self.timestamp) + '\n\n"data": ' + str(self.data) + '\n\n"public_key": ' + str(self.public_key) + '\n\n"signature": ' + str(self.signed) + "\n\n}\n\n"
-
     def __repr__(self):
-        res = {}
-        res['index'] = int(self.index),
-        res['prev_signed'] = self.prev_signed,
-        res['timestamp'] = self.timestamp,
-        res['data'] = self.data,
-        res['public_key'] = str(self.public_key),
-        res['signature'] = str(self.signed)
-        return json.dumps(res)
+        return f'\n"index": {self.index};\n"prev_signed": {self.prev_signed};\n"timestamp": {self.timestamp};\n"data": {self.data};\n"public_key": {self.public_key};\n"signature": {self.signed};\n'
 
 
 class blockChain(object):
@@ -53,6 +44,15 @@ class blockChain(object):
     peers = []
     master_file = "blockchain_key.pem"
     bc_k_file = "user_bc_key.pem"
+    # vote number (i.e. seq id)
+    current_vote = 0
+    # vote status open(True)/closed(False)
+    vote_live = False
+    # the identifier for the node (i.e. subscription topic)
+    current_oracle = None
+    # block number
+    current_block = 0
+    instance = None
     instance = None
 
     def __init__(self):
@@ -100,7 +100,6 @@ class blockChain(object):
         # payload = str(block.index) + "_:_" + str(block.data)
         payload = str(block.data) + str(block.prev_signed) + str(block.index) + str(block.timestamp)
         hasher = SHA256.new(payload.encode())
-        log.info(hasher.digest())
         v = pss.new(key.publickey())
         try:
             v.verify(hasher, bytes.fromhex(block.signed))
@@ -116,6 +115,8 @@ class blockChain(object):
         if int(block.index) == len(self.blocks):
             log.info('adding new block')
             self.blocks.append(block)
+            return True
+        return False
 
     def gen_blockchain_key(self):
         key = RSA.generate(2048)
@@ -161,52 +162,138 @@ class blockChain(object):
         return blk
 
     def extract_block(self, block_data):
-        log.info("EXTRACT")
         # log.info block_data
-        log.info(block_data)
-        blk_dict = json.loads(block_data)
-        index = blk_dict["index"][0]
-        prev_signed = blk_dict["prev_signed"][0]
-        timestamp = blk_dict["timestamp"][0]
-        data = blk_dict["data"][0]
-        public_key = blk_dict["public_key"][0]
-        log.info(public_key)
-        signed = blk_dict["signature"]
+        log.info("Extracting")
+        index = self.extract_field("index", block_data)
+        prev_signed = self.extract_field("prev_signed", block_data)
+        timestamp = self.extract_field("timestamp", block_data)
+        data = self.extract_field("data", block_data)
+        public_key = self.extract_field("public_key", block_data)
+        signed = self.extract_field("signature", block_data)
         # log.info "extracted values for block", index, prev_signed, timestamp, signed
         return block(index, prev_signed, data, public_key, time_st=timestamp,
                      signed=signed)
 
-    # def extract_block(self, block_data):
-    #     log.info("EXTRACT")
-    #     # log.info block_data
-    #     blk_dict = json.loads(block_data)
-    #     index = self.extract_field("index", block_data)
-    #     prev_signed = self.extract_field("prev_signed", block_data)
-    #     timestamp = self.extract_field("timestamp", block_data)
-    #     data = self.extract_field("data", block_data)
-    #     public_key = self.extract_field("public_key", block_data)
-    #     log.info(public_key)
-    #     signed = self.extract_field("signature", block_data)
-    #     # log.info "extracted values for block", index, prev_signed, timestamp, signed
-    #     return block(index, prev_signed, data, public_key, time_st=timestamp,
-    #                  signed=signed)
-
     def extract_list_blocks(self, data):
         log.info("EXTRACTING LIST")
         # log.info data
-        blocks = []
         data_split = data.split(',')
         for obj in data_split:
             blk = self.extract_block(obj)
-            if blk:
-                blocks.append(blk)
-        return blocks
+            if self.verify_block(blk):
+                self.consume(blk)
+        return True
 
     def extract_field(self, field_name, data):
-        sp_data = data.split('\\n\\n')
+        sp_data = str(data).split(';')
         for line in sp_data:
             if field_name in line:
                 # log.info field_name, line
                 res = line.split(': ')[-1]
                 # log.info res
                 return res
+
+    def oracle(self, payload):
+        action, value = payload.split('|_|')
+        if action == 'I am oracle':
+            log.info('new oracle %s', value)
+            self.set_current_oracle(value)
+            # update the new oracle topic
+            return True
+        elif action == 'new oracle':
+            log.info('looking for oracle, broadcasters last known: %s', value)
+            log.info('current oracle: %s', self.get_current_oracle())
+            return True
+            # check if I have been select
+            # if i was selected send I am oracle out
+            # 
+        log.error("oracle filter not found %s", (action, value))
+        return False
+
+    def data(self, payload):
+        action, value = payload.split('|_|')
+        log.info("data %s", (action, value))
+        return True
+
+    def vote(self, payload):
+        action, value = payload.split('|_|')
+        if action == 'open':
+            log.info('vote open')
+            self.set_current_vote(value)
+            self.set_vote_live(True)
+            # vote status changed to open
+            # check index in value
+            # check if have something to add
+            # if something, send stub 
+            return True
+        elif action == 'close':
+            log.info('close vote')
+            self.set_vote_live(False)
+            value.split('_|_')
+            return True
+            # vote status changed to closed
+        elif action == 'results':
+            log.info('results from vote')
+            broad_list = json.loads(value)
+            return True
+            # vote results replace current broadcast
+            # if something sent, check for my number
+        log.error("vote filter not found %s", (action, value))
+        return False
+
+    def reg_user(self, payload):
+        zmq_soc = ZMQ_Soc.get_instance()
+        action, value = payload.split('|_|')
+        topic, ip, pkey = value.split('_|_')
+        if action == 'hello':
+            log.info('new user')
+            return zmq_soc.add_subscription(ip, topic, pkey)
+        elif action == 'bad':
+            log.info('bad user')
+            return True
+        elif action == 'bye':
+            log.info('user leaving')
+            return True
+        log.error("register not found %s", (action, value))
+        return False
+
+    def consume(self, block):
+        bc = blockChain.get_instance()
+        data = block.data
+        fltr, payload = data.split('|_#_|')
+        if fltr == 'oracle':
+            self.oracle(payload)
+        elif fltr == 'data':
+            self.data(payload)
+        elif fltr == 'vote':
+            self.vote(payload)
+        elif fltr == 'register':
+            self.reg_user(payload)
+        else:
+            log.error('dropping packet unknown action: %s', fltr)
+            return False
+        return bc.add_block(block)
+
+    def get_current_vote(self):
+        return self.current_vote
+
+    def set_current_vote(self, vote_num):
+        self.current_vote = vote_num
+    
+    def get_vote_live(self):
+        return self.vote_live
+
+    def set_vote_live(self, status):
+        self.vote_live = status
+
+    def get_current_oracle(self):
+        return self.current_oracle
+
+    def set_current_oracle(self, oracle):
+        self.current_vote = oracle
+
+    def get_current_block(self):
+        return self.current_block
+
+    def set_current_block(self, block_num):
+        self.current_block = block_num
