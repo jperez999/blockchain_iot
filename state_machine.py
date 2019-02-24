@@ -40,6 +40,7 @@ class ZMQ_Soc:
         return self.pub_socket
 
     def add_subscription(self, con_str, topic, p_key):
+        log.info(f'{con_str}{topic}{p_key}')
         new_rec = self.create_sub_tuple(con_str, topic, p_key)
         if self.rec_dup_check(new_rec):
             return False
