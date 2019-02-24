@@ -16,8 +16,10 @@ def join_up(node_ip):
         'topic': args.my_topic,
         'p_key': bc.get_key_pair()
     }
-    res = requests.post(endpoint, data=json.dumps(payload))
-    log.info(res.text)
+    res = requests.post(endpoint,
+                        headers={'Content-Type': 'application/json'},
+                        data=json.dumps(payload))
+    log.info(res.test)
     bc.extract_list_blocks(res.text)
 
 
