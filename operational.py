@@ -23,6 +23,7 @@ log.setLevel(logging.INFO)
 def parse_args():
     parser = ArgumentParser()
     parser.add_argument('--node-ip', default=None)
+    parser.add_argument('--aws', default=False)
     return parser.parse_args()
 
 
