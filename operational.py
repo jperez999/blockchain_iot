@@ -51,7 +51,7 @@ def join():
     data = request.json
     log.info(data)
     threading.Thread(target=add_new_user, 
-                     args=(data['con_str'], data['topic'], data['p_key']))
+                     args=(data['con_str'], data['topic'], data['p_key'])).start()
     return str(blockChain.blocks)
 
 
