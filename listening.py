@@ -35,8 +35,11 @@ def first_man():
 def main_listen_loop():
     log.info("listening")
     bc = blockChain.get_instance()
+    log.info('blockchain in')
     zmq_obj = ZMQ_Soc.get_instance()
+    log.info('zmq instance in')
     socket = zmq_obj.get_sub_sock()
+    log.info('socket grabbed')
     while True:
         messagedata = str(socket.recv())
         # split and process message data, topic 

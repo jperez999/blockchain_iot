@@ -56,8 +56,9 @@ def send_get_data():
     # create block
     # send block
     bc = blockChain.get_instance()
+    zmq_obj = ZMQ_Soc.get_instance()
     gen_block = bc.gen_block('register', f'hello|_|{args.my_topic}_|_{args.my_ip}_|_{bc.get_key_pair()}')
-    broadcast(str(gen_block))
+    zmq_obj.broadcast(str(gen_block))
     # bq.add_block(str(gen_block))
     return "Block added to broadcast queue"
 
@@ -68,6 +69,8 @@ def peers():
 
 if __name__ == "__main__":
     cmd_args = parse_args()
+    bc = blockChain.get_instance()
+    ZMQ_Soc.get_instance().add_subscription(args.my_ip, args.my_topic, bc.public_key)
     log.info(cmd_args)
     if cmd_args.node_ip:
         join_up(cmd_args.node_ip)
