@@ -10,15 +10,15 @@ log = logging.getLogger()
 
 def join_up(node_ip):
     bc = blockChain.get_instance()
-    endpoint = f'{node_ip}:9999/join'
+    endpoint = f'http://{node_ip}:9999/join'
     payload = {
         'con_str': args.my_ip,
         'topic': args.my_topic,
         'p_key': bc.get_key_pair()
     }
     res = requests.post(endpoint, data=json.dumps(payload))
-    log.info(res.json())
-    bc.extract_list_blocks(res.json())
+    log.info(res.text)
+    bc.extract_list_blocks(res.text)
 
 
 def first_man():

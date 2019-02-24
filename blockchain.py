@@ -156,7 +156,7 @@ class blockChain(object):
 
     def make_first_block(self):
         key = RSA.importKey(open(self.master_file, "rb").read())
-        blk = block(0, 0, "base_block", key.publickey().export_key())
+        blk = block(0, 0, "base_block", self.public_key)
         blk.create_hash(key.export_key())
         # self.blocks.append(blk)
         return blk

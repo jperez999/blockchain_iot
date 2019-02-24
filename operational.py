@@ -3,7 +3,7 @@ import json
 import logging
 import threading
 import block_args as args
-from listening import main_listen_loop, first_man
+from listening import main_listen_loop, first_man, join_up
 from flask import Flask, request
 from state_machine import ZMQ_Soc, BlockQueue
 from blockchain import blockChain
@@ -26,13 +26,6 @@ def parse_args():
     return parser.parse_args()
 
 
-def broadcast(payload):
-    log.info('setting payload to queue...')
-    sock = ZMQ_Soc.get_instance().get_pub_sock()
-    payload = args.my_topic + '#_|_#' + payload
-    sock.send(payload.encode())
-
-
 app = Flask(__name__)
 app.debug = False
 
@@ -48,7 +41,7 @@ def join():
     # take info 
     data = request.json
     log.info(data)
-    return blockChain.blocks
+    return str(blockChain.blocks)
 
 
 # @app.route('/send_data', methods=['POST'])
@@ -76,7 +69,9 @@ def peers():
 if __name__ == "__main__":
     cmd_args = parse_args()
     log.info(cmd_args)
-    if not cmd_args.node_ip:
+    if cmd_args.node_ip:
+        join_up(cmd_args.node_ip)
+    else:
         first_man()
     thd = threading.Thread(target=main_listen_loop).start()
     app.run(host='0.0.0.0', port=9999, use_debugger=False)
