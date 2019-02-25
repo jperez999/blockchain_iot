@@ -24,20 +24,55 @@ log.setLevel(logging.INFO)
 def parse_args():
     parser = ArgumentParser()
     parser.add_argument('--node-ip', default=None)
-    parser.add_argument('--aws', default=False)
     return parser.parse_args()
 
 
-def add_new_user(con_str, topic, p_key):
-    time.sleep(2)
+def broadcast_block(sub_filter, payload):
     bc = blockChain.get_instance()
     zmq_obj = ZMQ_Soc.get_instance()
-    gen_block = bc.gen_block('register', f'hello|_|{topic}_|_{con_str}_|_{p_key}')
+    gen_block = bc.gen_block(f'{sub_filter}', f'{payload}')
     zmq_obj.broadcast(str(gen_block))
+
+
+def reg_api(con_str, topic, p_key, sub_filter='hello'):
+    time.sleep(2)
+    broadcast_block('register',
+                    f'{sub_filter}|_|{topic}_|_{con_str}_|_{p_key}')
+    return True
+
+
+def oracle_api(payload, iam=False):
+    if not i_am_oracle():
+        return False
+    req = f'oracle is|_|{payload}'
+    if iam:
+        req = f'I am oracle|_|{payload}'
+    broadcast_block('oracle', req)
+    return True
+
+
+def vote_status(status):
+    # check if oracle 
+    # send open/close status for a vote
+    # if open increment vote 
+    bc = blockChain.get_instance()
+    vote_num = bc.get_current_vote()
+    if status == 'open':
+        vote_num = vote_num + 1
+    broadcast_block('vote', f'{status}|_|{vote_num}')
+
+
+def broad_results(results):
+    broadcast_block('vote', f'results|_|{results}')
+
+
+def i_am_oracle():
+    bc = blockChain.get_instance()
+    return bc.current_oracle == args.my_topic
+
 
 app = Flask(__name__)
 app.debug = False
-
 
 
 @app.route('/blocks', methods=['POST'])
@@ -50,7 +85,7 @@ def join():
     # take info 
     data = request.json
     log.info(data)
-    threading.Thread(target=add_new_user, 
+    threading.Thread(target=reg_api, 
                      args=(data['con_str'], data['topic'], data['p_key'])).start()
     return str(blockChain.blocks)
 

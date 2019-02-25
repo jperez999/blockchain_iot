@@ -52,6 +52,7 @@ class blockChain(object):
     current_oracle = None
     # block number
     current_block = 0
+    my_next_index = 0
     instance = None
     instance = None
 
@@ -195,15 +196,20 @@ class blockChain(object):
 
     def oracle(self, payload):
         action, value = payload.split('|_|')
-        if action == 'I am oracle':
+        if action == 'oracle is':
             log.info('new oracle %s', value)
             self.set_current_oracle(value)
             # update the new oracle topic
             return True
-        elif action == 'new oracle':
+        elif action == 'I am oracle':
             log.info('looking for oracle, broadcasters last known: %s', value)
             log.info('current oracle: %s', self.get_current_oracle())
-            return True
+            if self.current_oracle == value:
+                return True
+            else:
+                log.error('Have different oracle on record: %s',
+                          self.current_oracle)
+                return False
             # check if I have been select
             # if i was selected send I am oracle out
             # 
@@ -221,20 +227,20 @@ class blockChain(object):
             log.info('vote open')
             self.set_current_vote(value)
             self.set_vote_live(True)
-            # vote status changed to open
-            # check index in value
             # check if have something to add
             # if something, send stub 
             return True
         elif action == 'close':
             log.info('close vote')
             self.set_vote_live(False)
-            value.split('_|_')
+            # value is vote number
+            # process results and send
             return True
             # vote status changed to closed
         elif action == 'results':
             log.info('results from vote')
             broad_list = json.loads(value)
+            process_results(broad_list)
             return True
             # vote results replace current broadcast
             # if something sent, check for my number
