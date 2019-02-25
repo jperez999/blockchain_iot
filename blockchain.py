@@ -227,8 +227,8 @@ class blockChain(object):
             log.info('vote open')
             self.set_current_vote(value)
             self.set_vote_live(True)
-            # check if have something to add
-            # if something, send stub 
+            # TODO: check if have something to add
+            # TODO: if something, send stub 
             return True
         elif action == 'close':
             log.info('close vote')
@@ -246,6 +246,10 @@ class blockChain(object):
             # if something sent, check for my number
         log.error("vote filter not found %s", (action, value))
         return False
+
+    def process_results(self, results):
+        # get my block index from the list, if have one
+        log.info('got results for vote: %s', self.current_vote)
 
     def reg_user(self, payload):
         zmq_soc = ZMQ_Soc.get_instance()
