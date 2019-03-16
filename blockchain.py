@@ -204,6 +204,11 @@ class blockChain(object):
             log.info('new oracle %s', value)
             if zmq.find_in_list(value):
                 self.set_current_oracle(value)
+                if self.public_key == value:
+                    log.info('I am oracle now')
+                    # send out i am
+                    block = self.gen_block('oracle', f'I am oracle|_|{self.public_key}')
+                    zmq.broadcast(block)
             # update the new oracle topic
             return True
         elif action == 'I am oracle':

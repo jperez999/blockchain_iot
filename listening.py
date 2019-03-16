@@ -31,7 +31,7 @@ def first_man():
     log.info('registering')
     if bc.verify_block(blk2):
         bc.consume(blk2)
-    blk3 = bc.gen_block('oracle', f'I am oracle|_|{args.my_topic}')
+    blk3 = bc.gen_block('oracle', f'new|_|{bc.public_key}')
     if bc.verify_block(blk3):
         bc.consume(blk3)
 
