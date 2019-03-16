@@ -54,6 +54,7 @@ class blockChain(object):
     current_block = 0
     release_order = {}
     instance = None
+    public_key = None
 
     def __init__(self):
         if blockChain.instance:
@@ -269,6 +270,27 @@ class blockChain(object):
             return True
         log.error("register not found %s", (action, value))
         return False
+    
+
+    def vote_status(self, status):
+        # check if oracle 
+        # send open/close status for a vote
+        # if open increment vote 
+        if status == 'open':
+            vote_num = self.current_vote + 1
+        self.broadcast_block('vote', f'{status}|_|{vote_num}')
+
+    def broad_results(self, results):
+        self.broadcast_block('vote', f'results|_|{self.current_vote}_|_{results}')
+
+
+    def broadcast_block(self, sub_filter, payload):
+        bc = blockChain.get_instance()
+        # zmq_obj = ZMQ_Soc.get_instance()
+        bq = BlockQueue.get_instance()
+        gen_block = bc.gen_block(f'{sub_filter}', f'{payload}')
+        bq.add_block(str(gen_block))
+
 
     def consume(self, block):
         bc = blockChain.get_instance()

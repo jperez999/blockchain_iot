@@ -5,7 +5,7 @@ import requests
 from blockchain import blockChain
 import block_args as args
 import json
-from operational import vote_status, broad_results
+
 
 log = logging.getLogger()
 
@@ -64,7 +64,8 @@ def pick_new_oracle():
     res = None
     while(not res and args.my_ip not in res['connect']):
         res = random.choice(zmq.sub_list())
-    block = bc.gen_block('oracle', f'new|_|{res['p_key']}')
+        p_key = res.get('p_key')
+    block = bc.gen_block('oracle', f'new|_|{p_key}')
     zmq.broadcast(block)
 
 
