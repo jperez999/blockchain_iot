@@ -52,8 +52,7 @@ class blockChain(object):
     current_oracle = None
     # block number
     current_block = 0
-    my_next_index = 0
-    instance = None
+    release_order = {}
     instance = None
 
     def __init__(self):
@@ -130,6 +129,8 @@ class blockChain(object):
 
     def get_key_pair(self):
         log.info("Looking for keys")
+        if self.public_key:
+            return self.public_key
         try:
             encoded_key = open(self.bc_k_file, "r").read()
             key = RSA.import_key(encoded_key)
@@ -195,10 +196,13 @@ class blockChain(object):
                 return res
 
     def oracle(self, payload):
+        zmq = ZMQ_Soc.get_instance()
         action, value = payload.split('|_|')
-        if action == 'oracle is':
+        if action == 'new':
+            # value should be public key
             log.info('new oracle %s', value)
-            self.set_current_oracle(value)
+            if zmq.find_in_list(value):
+                self.set_current_oracle(value)
             # update the new oracle topic
             return True
         elif action == 'I am oracle':
@@ -227,8 +231,7 @@ class blockChain(object):
             log.info('vote open')
             self.set_current_vote(value)
             self.set_vote_live(True)
-            # TODO: check if have something to add
-            # TODO: if something, send stub 
+            # check if I have something and I am not oracle
             return True
         elif action == 'close':
             log.info('close vote')
@@ -240,7 +243,7 @@ class blockChain(object):
         elif action == 'results':
             log.info('results from vote')
             broad_list = json.loads(value)
-            process_results(broad_list)
+            self.process_results(broad_list)
             return True
             # vote results replace current broadcast
             # if something sent, check for my number

@@ -29,9 +29,11 @@ def parse_args():
 
 def broadcast_block(sub_filter, payload):
     bc = blockChain.get_instance()
-    zmq_obj = ZMQ_Soc.get_instance()
+    # zmq_obj = ZMQ_Soc.get_instance()
+    bq = BlockQueue.get_instance()
     gen_block = bc.gen_block(f'{sub_filter}', f'{payload}')
-    zmq_obj.broadcast(str(gen_block))
+    bq.add_block(str(gen_block))
+    # zmq_obj.broadcast(str(gen_block))
 
 
 def reg_api(con_str, topic, p_key, sub_filter='hello'):
@@ -56,14 +58,14 @@ def vote_status(status):
     # send open/close status for a vote
     # if open increment vote 
     bc = blockChain.get_instance()
-    vote_num = bc.get_current_vote()
     if status == 'open':
-        vote_num = vote_num + 1
+        vote_num = bc.current_vote + 1
     broadcast_block('vote', f'{status}|_|{vote_num}')
 
 
 def broad_results(results):
-    broadcast_block('vote', f'results|_|{results}')
+    bc = blockChain.get_instance()
+    broadcast_block('vote', f'results|_|{bc.current_vote}_|_{results}')
 
 
 def i_am_oracle():
@@ -102,15 +104,32 @@ def send_get_data():
     # create block
     # send block
     bc = blockChain.get_instance()
-    zmq_obj = ZMQ_Soc.get_instance()
+    # zmq_obj = ZMQ_Soc.get_instance()
+    bq = BlockQueue.get_instance()
     gen_block = bc.gen_block('register', f'hello|_|{args.my_topic}_|_{args.my_ip}_|_{bc.get_key_pair()}')
-    zmq_obj.broadcast(str(gen_block))
-    # bq.add_block(str(gen_block))
+    bq.add_block(str(gen_block))
+    # zmq_obj.broadcast(str(gen_block))
     return "Block added to broadcast queue"
+
 
 @app.route('/peers', methods=['GET'])
 def peers():
     return str(len(ZMQ_Soc.sub_list)) + json.dumps(str(ZMQ_Soc.sub_list))
+
+
+# p_key=<p_key>
+@app.route('/stubs', methods=['POST'])
+def stubs():
+    data = request.json
+    zmq = ZMQ_Soc.get_instance()
+    if zmq.find_in_list(data.get('p_key')):
+        if data.get('p_key') not in zmq.stubs_list:
+            zmq.stubs_list.append(data.get('p_key'))
+            return {}, 200
+        else:
+            return {'error': 'already has a slot'}, 405
+    else:
+        return {'error': 'peer not found'}, 406
 
 
 if __name__ == "__main__":

@@ -12,6 +12,8 @@ class ZMQ_Soc:
     sub_list = []
     sub_socket = None
     pub_socket = None
+    stubs_list = []
+    
     instance = None
 
     def __init__(self):
@@ -55,6 +57,12 @@ class ZMQ_Soc:
             if new_rec['connect'] == rec['connect'] or\
                new_rec['p_key'] == rec['p_key']:
                 log.info('record found!')
+                return True
+        return False  
+
+    def find_in_list(self, p_key):
+        for res in self.sub_list:
+            if res['p_key'] == p_key:
                 return True
         return False
 
