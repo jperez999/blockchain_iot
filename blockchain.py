@@ -334,7 +334,7 @@ class blockChain(object):
         return self.current_oracle
 
     def set_current_oracle(self, oracle):
-        self.current_vote = oracle
+        self.current_oracle = oracle
 
     def get_current_block(self):
         return self.current_block
