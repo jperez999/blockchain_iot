@@ -333,6 +333,7 @@ class blockChain(object):
         return self.vote_live
 
     def set_vote_live(self, status):
+        log.info(f'setting vote {status}')
         self.vote_live = status
 
     def get_current_oracle(self):
