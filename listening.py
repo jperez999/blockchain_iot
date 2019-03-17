@@ -76,7 +76,7 @@ def pick_new_oracle():
     bc = blockChain.get_instance()
     res = False
     while(not res):
-        res = random.choice(zmq.sub_list())
+        res = random.choice(zmq.sub_list)
         if args.my_ip not in res.get('connect'):
             p_key = res.get('p_key')
         else:
