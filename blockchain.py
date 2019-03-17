@@ -56,6 +56,7 @@ class blockChain(object):
     # block number
     current_block = 0
     release_order = []
+    res_out = False
     instance = None
     public_key = None
 

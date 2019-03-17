@@ -113,8 +113,8 @@ def oracle_action():
             # choose new oracle (New Oracle is XXX.XXX.XXX.XXX)
             pick_new_oracle()
             bc.res_out = False
-            bc.oracle_move = False 
-            
+            bc.oracle_move = False
+
 
 def next_move():
     # grab state machine, and blockchain
