@@ -2,7 +2,7 @@ import time
 import json
 import logging
 import block_args as args
-from state_machine import ZMQ_Soc
+from state_machine import ZMQ_Soc, BlockQueue
 from Crypto.PublicKey import RSA
 from Crypto.Hash import SHA256
 from Crypto.Signature import pss
