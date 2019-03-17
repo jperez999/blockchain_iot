@@ -46,6 +46,7 @@ class blockChain(object):
     bc_k_file = "user_bc_key.pem"
     # vote number (i.e. seq id)
     current_vote = 0
+    current_vote_start = 0
     # vote status open(True)/closed(False)
     vote_live = False
     # the identifier for the node (i.e. subscription topic)
@@ -55,6 +56,7 @@ class blockChain(object):
     release_order = []
     instance = None
     public_key = None
+
 
     def __init__(self):
         if blockChain.instance:
@@ -150,13 +152,6 @@ class blockChain(object):
         self.gen_block("Register", self.public_key)
         return True
 
-    def voteopen(self):
-        # self.get_peers()
-        # send out registration block
-        log.info("creating voting block")
-        self.gen_block("Vote", f"Vote_Open_{args.current_vote + 1}")
-        return True
-
     def make_first_block(self):
         key = RSA.importKey(open(self.master_file, "rb").read())
         blk = block(0, 0, "base_block", self.public_key)
@@ -234,9 +229,11 @@ class blockChain(object):
     def vote(self, payload):
         action, value = payload.split('|_|')
         if action == 'open':
+            vote_num, start_block = value.split('_|_')
             log.info('vote open')
-            self.set_current_vote(value)
+            self.set_current_vote(vote_num)
             self.set_vote_live(True)
+            self.set_vote_start_block(start_block)
             # check if I have something and I am not oracle
             return True
         elif action == 'close':
@@ -324,6 +321,12 @@ class blockChain(object):
     def set_current_vote(self, vote_num):
         self.current_vote = vote_num
     
+    def get_vote_start_block(self):
+        return self.current_vote_start
+
+    def set_vote_start_block(self, new_block):
+        self.current_vote_start = new_block
+
     def get_vote_live(self):
         return self.vote_live
 

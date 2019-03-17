@@ -66,7 +66,7 @@ def i_am_oracle():
 
 def all_prev_vote_blocks_recvd():
     bc = blockChain.get_instance()
-    if bc.current_block == bc.release_order['final_block']:
+    if bc.current_block == bc.vote_start_block + len():
         return True
     return False
 
@@ -82,6 +82,12 @@ def pick_new_oracle():
     zmq.broadcast(block)
 
 
+def countdown(delay):
+    bc = blockChain.get_instance()
+    time.sleep(delay)
+    bc.vote_status('closed')
+
+
 def oracle_action():
     bc = blockChain.get_instance()
     zmq = ZMQ_Soc.get_instance()
@@ -92,10 +98,11 @@ def oracle_action():
             # create vote open block with my ip and min open time
             # as oracle wait for min open time to finish
             # send close_vote
-            threading.Thread(target=bc.vote_status, args=('closed') )
+            threading.Thread(target=countdown, args=(5))
             # bc.vote_status('closed')
             # consume all stubs, create release order
             # send release_order
+        elif bc.vote_live:
             bc.broad_results(random.shuffle(zmq.stubs_list))
         elif all_prev_vote_blocks_recvd(): 
             # choose new oracle (New Oracle is XXX.XXX.XXX.XXX)
