@@ -98,7 +98,7 @@ def oracle_action():
             # create vote open block with my ip and min open time
             # as oracle wait for min open time to finish
             # send close_vote
-            threading.Thread(target=countdown, args=(5)).start()
+            threading.Thread(target=countdown, args=(5,)).start()
             # time.sleep(5)
             # bc.vote_status('closed')
             # consume all stubs, create release order
