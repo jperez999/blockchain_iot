@@ -211,12 +211,11 @@ class blockChain(object):
         elif action == 'I am oracle':
             log.info('looking for oracle, broadcasters last known: %s', value)
             log.info('current oracle: %s', self.get_current_oracle())
-            if self.current_oracle == value:
-                return True
-            else:
-                log.error('Have different oracle on record: %s',
-                          self.current_oracle)
-                return False
+            self.current_oracle = value
+            # else:
+            #     log.error('Have different oracle on record: %s',
+            #               self.current_oracle)
+            return True
             # check if I have been select
             # if i was selected send I am oracle out
             # 

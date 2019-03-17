@@ -23,7 +23,7 @@ def join_up(node_ip):
     res = requests.post(endpoint,
                         headers={'Content-Type': 'application/json'},
                         data=json.dumps(payload))
-    log.info(res.text)
+    # log.info(res.text)
     bc.extract_list_blocks(res.text)
 
 
@@ -117,6 +117,7 @@ def oracle_action():
             pick_new_oracle()
             bc.res_out = False
             bc.oracle_move = False
+            bc.vote_live = False
 
 
 def next_move():
