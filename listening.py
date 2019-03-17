@@ -82,7 +82,7 @@ def pick_new_oracle():
         else:
             res = False
     block = bc.gen_block('oracle', f'new|_|{p_key}')
-    zmq.broadcast(block)
+    zmq.broadcast(str(block))
 
 
 def countdown(delay):
