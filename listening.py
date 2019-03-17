@@ -92,26 +92,29 @@ def oracle_action():
     bc = blockChain.get_instance()
     zmq = ZMQ_Soc.get_instance()
     if len(zmq.sub_list) > 1:
-        if not bc.vote_live and not bc.oracle_move:
-            zmq.stubs_list = []
+        if not bc.vote_live and not bc.oracle_move and not bc.res_out:
             bc.vote_status('open')
             bc.oracle_move = True
             # create vote open block with my ip and min open time
             # as oracle wait for min open time to finish
             # send close_vote
             threading.Thread(target=countdown, args=(5))
-            #time.sleep(5)
-            #bc.vote_status('closed')
+            # time.sleep(5)
+            # bc.vote_status('closed')
             # consume all stubs, create release order
             # send release_order   
-        elif bc.oracle_move:
-            bc.broad_results(random.shuffle(str(zmq.stubs_list)))
-            bc.oracle_move = False
-        elif all_prev_vote_blocks_recvd(): 
+        elif bc.oracle_move and not bc.vote_live and not bc.res_out:
+            if bc.release_order:
+                bc.broad_results(random.shuffle(str(zmq.stubs_list)))
+            else:
+                bc.broad_results([])
+            bc.res_out = True
+        elif bc.res_out:
             # choose new oracle (New Oracle is XXX.XXX.XXX.XXX)
             pick_new_oracle()
+            bc.res_out = False
+            bc.oracle_move = False 
             
-
 
 def next_move():
     # grab state machine, and blockchain

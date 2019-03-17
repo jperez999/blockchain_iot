@@ -59,7 +59,6 @@ class blockChain(object):
     instance = None
     public_key = None
 
-
     def __init__(self):
         if blockChain.instance:
             log.info('this is a singleton')
@@ -286,7 +285,7 @@ class blockChain(object):
         self.broadcast_block('vote', f'{status}|_|{vote_num}_|_{self.current_block}')
 
     def broad_results(self, results):
-        self.broadcast_block('vote', f'results|_|{self.current_vote}_|_{results}')
+        self.broadcast_block('vote', f'results|_|{self.current_vote}_|_{str(results)}')
 
     def broadcast_block(self, sub_filter, payload):
         bc = blockChain.get_instance()
