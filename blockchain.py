@@ -27,7 +27,7 @@ class block(object):
         key = RSA.import_key(private_key)
         if self.signed is not None:
             return self.signed
-        log.info("making the HMAC for block")
+        log.info(f"making the HMAC for block {self.index}")
         payload = str(self.data) + str(self.prev_signed) + str(self.index) + str(self.timestamp)
 #        payload = str(self.data) + str(self.prev_signed) + str(self.index) + str(self.timestamp)
         signer = SHA256.new(data=payload.encode())
@@ -52,7 +52,7 @@ class blockChain(object):
     current_oracle = None
     # block number
     current_block = 0
-    release_order = {}
+    release_order = []
     instance = None
     public_key = None
 
