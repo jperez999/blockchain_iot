@@ -40,7 +40,7 @@ def first_man():
 
 def get_index_release():
     bc = blockChain.get_instance()
-    if not bc.vote_live and bc.current_vote > 0:
+    if not bc.vote_live and int(bc.current_vote) > 0:
         for index, entry in bc.release_order:
             if entry == bc.public_key:
                 return index + bc.current_block + 1
