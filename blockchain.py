@@ -46,9 +46,11 @@ class blockChain(object):
     bc_k_file = "user_bc_key.pem"
     # vote number (i.e. seq id)
     current_vote = 0
+    # block vote started at 
     current_vote_start = 0
     # vote status open(True)/closed(False)
     vote_live = False
+    oracle_move = False
     # the identifier for the node (i.e. subscription topic)
     current_oracle = None
     # block number
