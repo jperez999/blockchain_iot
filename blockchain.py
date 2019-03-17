@@ -302,17 +302,21 @@ class blockChain(object):
         data = block.data
         fltr, payload = data.split('|_#_|')
         if fltr == 'oracle':
-            self.oracle(payload)
+            if bc.add_block(block):
+                self.oracle(payload)
         elif fltr == 'data':
-            self.data(payload)
+            if bc.add_block(block):
+                self.data(payload)
         elif fltr == 'vote':
-            self.vote(payload)
+            if bc.add_block(block):
+                self.vote(payload)
         elif fltr == 'register':
-            self.reg_user(payload)
+            if bc.add_block(block):
+                self.reg_user(payload)
         else:
             log.error('dropping packet unknown action: %s', fltr)
             return False
-        return bc.add_block(block)
+        return True
 
     def get_current_vote(self):
         return self.current_vote
