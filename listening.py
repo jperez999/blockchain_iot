@@ -6,6 +6,7 @@ import requests
 from blockchain import blockChain
 import block_args as args
 import json
+import threading
 
 
 log = logging.getLogger()
@@ -90,9 +91,9 @@ def oracle_action():
             bc.vote_status('open')
             # create vote open block with my ip and min open time
             # as oracle wait for min open time to finish
-            time.sleep(2)
             # send close_vote
-            bc.vote_status('closed')
+            threading.Thread(target=bc.vote_status, args=('closed') )
+            # bc.vote_status('closed')
             # consume all stubs, create release order
             # send release_order
             bc.broad_results(random.shuffle(zmq.stubs_list))
