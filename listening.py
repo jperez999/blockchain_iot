@@ -98,12 +98,12 @@ def oracle_action():
             # create vote open block with my ip and min open time
             # as oracle wait for min open time to finish
             # send close_vote
-            threading.Thread(target=countdown, args=(5))
-            # bc.vote_status('closed')
+            #threading.Thread(target=countdown, args=(5))
+            time.sleep(5)
+            bc.vote_status('closed')
             # consume all stubs, create release order
             # send release_order
-        elif bc.vote_live:
-            bc.broad_results(random.shuffle(zmq.stubs_list))
+            bc.broad_results(random.shuffle(str(zmq.stubs_list)))
         elif all_prev_vote_blocks_recvd(): 
             # choose new oracle (New Oracle is XXX.XXX.XXX.XXX)
             pick_new_oracle()

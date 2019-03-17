@@ -245,7 +245,7 @@ class blockChain(object):
             return True
             # vote status changed to closed
         elif action == 'results':
-            log.info('results from vote')
+            log.info(f'results from vote {value}')
             broad_list = json.loads(value)
             self.process_results(broad_list)
             return True
