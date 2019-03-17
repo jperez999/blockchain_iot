@@ -248,7 +248,8 @@ class blockChain(object):
             # vote status changed to closed
         elif action == 'results':
             log.info(f'results from vote {value}')
-            broad_list = json.loads(value)
+            vote_num, res_list = value.split('_|_')
+            broad_list = json.loads(res_list)
             self.process_results(broad_list)
             return True
             # vote results replace current broadcast
