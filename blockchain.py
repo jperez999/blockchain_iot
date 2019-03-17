@@ -238,7 +238,7 @@ class blockChain(object):
             self.set_vote_start_block(start_block)
             # check if I have something and I am not oracle
             return True
-        elif action == 'close':
+        elif action == 'closed':
             vote_num, start_block = value.split('_|_')
             log.info('close vote')
             self.set_vote_live(False)
