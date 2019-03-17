@@ -29,11 +29,11 @@ def parse_args():
 
 def broadcast_block(sub_filter, payload):
     bc = blockChain.get_instance()
-    # zmq_obj = ZMQ_Soc.get_instance()
-    bq = BlockQueue.get_instance()
+    zmq_obj = ZMQ_Soc.get_instance()
+    # bq = BlockQueue.get_instance()
     gen_block = bc.gen_block(f'{sub_filter}', f'{payload}')
-    bq.add_block(str(gen_block))
-    # zmq_obj.broadcast(str(gen_block))
+    # bq.add_block(str(gen_block))
+    zmq_obj.broadcast(str(gen_block))
 
 
 def reg_api(con_str, topic, p_key, sub_filter='hello'):
@@ -51,21 +51,6 @@ def oracle_api(payload, iam=False):
         req = f'I am oracle|_|{payload}'
     broadcast_block('oracle', req)
     return True
-
-
-def vote_status(status):
-    # check if oracle 
-    # send open/close status for a vote
-    # if open increment vote 
-    bc = blockChain.get_instance()
-    if status == 'open':
-        vote_num = bc.current_vote + 1
-    broadcast_block('vote', f'{status}|_|{vote_num}')
-
-
-def broad_results(results):
-    bc = blockChain.get_instance()
-    broadcast_block('vote', f'results|_|{bc.current_vote}_|_{results}')
 
 
 def i_am_oracle():
