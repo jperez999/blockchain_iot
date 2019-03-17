@@ -58,7 +58,7 @@ def my_block_next():
 
 def i_am_oracle():
     bc = blockChain.get_instance()
-    if bc.current_oracle == args.my_ip:
+    if bc.current_oracle == bc.public_key:
         return True
     return False
 
