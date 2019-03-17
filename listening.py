@@ -74,10 +74,13 @@ def all_prev_vote_blocks_recvd():
 def pick_new_oracle():
     zmq = ZMQ_Soc.get_instance()
     bc = blockChain.get_instance()
-    res = None
-    while(not res and args.my_ip not in res['connect']):
+    res = {}
+    while(not res and args.my_ip not in res.get('connect')):
         res = random.choice(zmq.sub_list())
-        p_key = res.get('p_key')
+        if args.my_ip not in res.get('connect'):
+            p_key = res.get('p_key')
+        else:
+            res = {}
     block = bc.gen_block('oracle', f'new|_|{p_key}')
     zmq.broadcast(block)
 
