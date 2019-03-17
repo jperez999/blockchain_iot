@@ -1,6 +1,7 @@
 from state_machine import ZMQ_Soc, BlockQueue
 import logging
 import random
+import time
 import requests
 from blockchain import blockChain
 import block_args as args
@@ -63,6 +64,7 @@ def i_am_oracle():
 
 
 def all_prev_vote_blocks_recvd():
+    bc = blockChain.get_instance()
     if bc.current_block == bc.release_order['final_block']:
         return True
     return False
@@ -85,16 +87,16 @@ def oracle_action():
     if len(zmq.sub_list) > 1:
         if not bc.vote_live:
             zmq.stubs_list = []
-            vote_status('open')
+            bc.vote_status('open')
             # create vote open block with my ip and min open time
             # as oracle wait for min open time to finish
-            sleep(2)
+            time.sleep(2)
             # send close_vote
-            vote_status('closed')
+            bc.vote_status('closed')
             # consume all stubs, create release order
             # send release_order
-            broad_results(random.shuffle(zmq.stubs_list))
-        elif bc.vote_live and all_prev_vote_blocks_recvd(): 
+            bc.broad_results(random.shuffle(zmq.stubs_list))
+        elif not bc.vote_live and all_prev_vote_blocks_recvd(): 
             # choose new oracle (New Oracle is XXX.XXX.XXX.XXX)
             pick_new_oracle()
 
@@ -105,8 +107,10 @@ def next_move():
     bq = BlockQueue.get_instance()
     zmq = ZMQ_Soc.get_instance()
     if my_block_next():
+        log.info('Its my turn, sending...')
         zmq.broadcast(bq.pop_block())
     elif i_am_oracle():
+        log.info('Oracle action check')
         oracle_action()
 
 

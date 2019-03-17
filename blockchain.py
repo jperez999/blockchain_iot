@@ -240,6 +240,7 @@ class blockChain(object):
             # check if I have something and I am not oracle
             return True
         elif action == 'close':
+            vote_num, start_block = value.split('_|_')
             log.info('close vote')
             self.set_vote_live(False)
             # value is vote number
@@ -275,7 +276,6 @@ class blockChain(object):
             return True
         log.error("register not found %s", (action, value))
         return False
-    
 
     def vote_status(self, status):
         # check if oracle 
@@ -283,11 +283,10 @@ class blockChain(object):
         # if open increment vote 
         if status == 'open':
             vote_num = self.current_vote + 1
-        self.broadcast_block('vote', f'{status}|_|{vote_num}')
+        self.broadcast_block('vote', f'{status}|_|{vote_num}_|_{self.current_block}')
 
     def broad_results(self, results):
         self.broadcast_block('vote', f'results|_|{self.current_vote}_|_{results}')
-
 
     def broadcast_block(self, sub_filter, payload):
         bc = blockChain.get_instance()
@@ -295,7 +294,6 @@ class blockChain(object):
         bq = BlockQueue.get_instance()
         gen_block = bc.gen_block(f'{sub_filter}', f'{payload}')
         bq.add_block(str(gen_block))
-
 
     def consume(self, block):
         bc = blockChain.get_instance()
