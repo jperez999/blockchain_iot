@@ -96,7 +96,7 @@ def oracle_action():
             # consume all stubs, create release order
             # send release_order
             bc.broad_results(random.shuffle(zmq.stubs_list))
-        elif not bc.vote_live and all_prev_vote_blocks_recvd(): 
+        elif all_prev_vote_blocks_recvd(): 
             # choose new oracle (New Oracle is XXX.XXX.XXX.XXX)
             pick_new_oracle()
 
@@ -133,6 +133,7 @@ def main_listen_loop():
             if bc.consume(blk):
                 # echo block
                 zmq_obj.broadcast(block)
+            log.info('making next move')
             next_move()
         # if my block is next on receipt send out block
         # Or if I am oracle and I HAVE Peers 
