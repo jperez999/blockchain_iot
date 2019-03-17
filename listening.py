@@ -36,12 +36,22 @@ def first_man():
         bc.consume(blk3)
 
 
+def get_index_release():
+    bc = blockChain.get_instance()
+    if not bc.vote_live and bc.vote_num > 0:
+        for index, entry in bc.release_order:
+            if entry == bc.public_key:
+                return index + bc.current_block + 1
+    return False
+
+
 def my_block_next():
     bc = blockChain.get_instance()
-    my_index = bc.release_order[args.my_ip]
-    if bc.current_block + 1 == my_start_point:
-        # it is my turn broadcast it
-        return True
+    my_index = get_index_release()
+    if my_index:
+        if bc.current_block + 1 == my_index:
+            # it is my turn broadcast it
+            return True
     return False
 
 
