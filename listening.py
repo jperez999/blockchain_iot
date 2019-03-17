@@ -112,6 +112,7 @@ def oracle_action():
             else:
                 bc.broad_results([])
             bc.res_out = True
+            bc.oracle_move
         elif bc.res_out:
             # choose new oracle (New Oracle is XXX.XXX.XXX.XXX)
             pick_new_oracle()
