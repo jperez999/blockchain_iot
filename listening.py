@@ -95,7 +95,7 @@ def oracle_action():
     bc = blockChain.get_instance()
     zmq = ZMQ_Soc.get_instance()
     if len(zmq.sub_list) > 1:
-        if not bc.vote_live and not bc.oracle_move and not bc.res_out:
+        if not bc.vote_live:
             bc.vote_status('open')
             bc.oracle_move = True
             # create vote open block with my ip and min open time
@@ -106,9 +106,9 @@ def oracle_action():
             # bc.vote_status('closed')
             # consume all stubs, create release order
             # send release_order   
-        elif bc.oracle_move and not bc.vote_live and not bc.res_out:
+        elif bc.oracle_move:
             if bc.release_order:
-                bc.broad_results(random.shuffle(str(zmq.stubs_list)))
+                bc.broad_results(random.shuffle(str(bc.release_order)))
             else:
                 bc.broad_results([])
             bc.res_out = True

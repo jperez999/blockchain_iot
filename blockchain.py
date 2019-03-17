@@ -231,8 +231,8 @@ class blockChain(object):
         action, value = payload.split('|_|')
         if action == 'open':
             vote_num, start_block = value.split('_|_')
-            log.info('vote open')
-            self.set_current_vote(vote_num)
+            log.info(f'vote open {vote_num} {start_block}')
+            self.set_current_vote(int(vote_num))
             self.set_vote_live(True)
             self.set_vote_start_block(start_block)
             # check if I have something and I am not oracle
@@ -321,7 +321,7 @@ class blockChain(object):
         return self.current_vote
 
     def set_current_vote(self, vote_num):
-        self.current_vote = vote_num
+        self.current_vote = int(vote_num)
     
     def get_vote_start_block(self):
         return self.current_vote_start
