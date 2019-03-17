@@ -281,6 +281,7 @@ class blockChain(object):
         # check if oracle 
         # send open/close status for a vote
         # if open increment vote 
+        vote_num = self.current_vote
         if status == 'open':
             vote_num = self.current_vote + 1
         self.broadcast_block('vote', f'{status}|_|{vote_num}_|_{self.current_block}')
