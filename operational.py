@@ -113,11 +113,11 @@ def stubs():
         if data.get('p_key') not in zmq.stubs_list:
             log.info('adding key to release')
             bc.release_order.append(data.get('p_key'))
-            return {}, 200
+            return json.dumps({}), 200
         else:
-            return {'error': 'already has a slot'}, 405
+            return json.dumps({'error': 'already has a slot'}), 405
     else:
-        return {'error': 'peer not found'}, 406
+        return json.dumps({'error': 'peer not found'}), 406
 
 
 if __name__ == "__main__":
