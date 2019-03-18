@@ -251,7 +251,7 @@ class blockChain(object):
             self.set_current_vote(int(vote_num))
             self.set_vote_live(True)
             # closed + 1, broadcast res + 1, start point + 1 = 3
-            self.set_vote_start_block(start_block + 3)
+            self.set_vote_start_block(int(start_block) + 3)
             # check if I have something and I am not oracle
             # if bq.queue_size() > 0:
             self.send_stub()
@@ -359,7 +359,7 @@ class blockChain(object):
         return self.current_vote_start
 
     def set_vote_start_block(self, new_block):
-        self.current_vote_start = new_block
+        self.current_vote_start = int(new_block)
 
     def get_vote_live(self):
         return self.vote_live
