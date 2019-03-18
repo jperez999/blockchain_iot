@@ -63,7 +63,7 @@ class ZMQ_Soc:
     def find_in_list(self, p_key):
         for res in self.sub_list:
             if res['p_key'] == p_key:
-                return True
+                return res
         return False
 
     def create_sub_tuple(self, con_str, topic, p_key):
