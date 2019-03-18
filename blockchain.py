@@ -240,7 +240,7 @@ class blockChain(object):
         elif action == 'closed':
             vote_num, start_block = value.split('_|_')
             log.info('close vote')
-            self.set_vote_live(False)
+            self.vote_live = False
             # value is vote number
             # process results and send
             return True

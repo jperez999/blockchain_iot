@@ -86,6 +86,7 @@ def pick_new_oracle():
 
 
 def countdown(delay):
+    log.info('running vote closed now')
     bc = blockChain.get_instance()
     time.sleep(delay)
     bc.vote_status('closed')
@@ -96,6 +97,7 @@ def oracle_action():
     zmq = ZMQ_Soc.get_instance()
     if len(zmq.sub_list) > 1:
         if not bc.vote_live:
+            log.info('in vote not live')
             bc.vote_status('open')
             bc.oracle_move = True
             # create vote open block with my ip and min open time
@@ -107,6 +109,7 @@ def oracle_action():
             # consume all stubs, create release order
             # send release_order   
         elif bc.oracle_move:
+            log.info('in vote broadcast')
             if bc.release_order:
                 bc.broad_results(random.shuffle(str(bc.release_order)))
             else:
@@ -114,6 +117,7 @@ def oracle_action():
             bc.res_out = True
             bc.oracle_move
         elif bc.res_out:
+            log.info('in vote oracle')
             # choose new oracle (New Oracle is XXX.XXX.XXX.XXX)
             pick_new_oracle()
             bc.res_out = False
