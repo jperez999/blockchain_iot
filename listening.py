@@ -77,8 +77,10 @@ def pick_new_oracle():
     while(not res):
         res = random.choice(zmq.sub_list)
         if args.my_ip not in res.get('connect'):
+            log.info('got oracles')
             p_key = res.get('p_key')
         else:
+            log.info('bad oracles')
             res = False
     log.info('new oracle found')
     block = bc.gen_block('oracle', f'new|_|{p_key}')
