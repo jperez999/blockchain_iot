@@ -308,8 +308,10 @@ class blockChain(object):
         # send open/close status for a vote
         # if open increment vote 
         vote_num = self.current_vote
+        log.info(f'current vote: {vote_num}')
         if status == 'open':
             vote_num = int(self.current_vote) + 1
+            log.info(f'current vote increased: {vote_num}')
         self.broadcast_block('vote', f'{status}|_|{vote_num}_|_{self.current_block}')
 
     def broad_results(self, results):

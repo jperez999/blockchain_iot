@@ -136,6 +136,7 @@ def oracle_action():
                 bc.res_out = False
                 bc.oracle_move = False
                 bc.vote_live = False
+                bc.release_order = []
             return
 
 
