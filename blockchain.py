@@ -122,6 +122,7 @@ class blockChain(object):
         if int(block.index) == len(self.blocks):
             log.info('adding new block')
             self.blocks.append(block)
+            self.current_block = block.index
             return True
         return False
 
