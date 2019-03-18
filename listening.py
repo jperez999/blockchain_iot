@@ -96,7 +96,7 @@ def oracle_action():
     bc = blockChain.get_instance()
     zmq = ZMQ_Soc.get_instance()
     if len(zmq.sub_list) > 1:
-        if not bc.vote_live:
+        if not bc.vote_live and not bc.oracle_move:
             log.info('in vote not live')
             bc.vote_status('open')
             bc.oracle_move = True
@@ -109,7 +109,7 @@ def oracle_action():
             # consume all stubs, create release order
             # send release_order   
             return
-        elif bc.oracle_move:
+        elif bc.oracle_move and not bc.vote_live:
             log.info('in vote broadcast')
             if bc.release_order:
                 bc.broad_results(random.shuffle(str(bc.release_order)))
