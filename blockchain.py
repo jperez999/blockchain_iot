@@ -265,8 +265,7 @@ class blockChain(object):
             log.info(f'results from vote {value}')
             vote_num, res_list = value.split('_|_')
             log.info(f'new broad list {res_list}')
-            broad_list = json.loads(res_list)
-            return self.process_results(broad_list)
+            return self.process_results(res_list)
             # vote results replace current broadcast
             # if something sent, check for my number
         log.error("vote filter not found %s", (action, value))
