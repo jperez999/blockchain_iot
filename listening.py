@@ -98,48 +98,46 @@ def countdown(delay):
 
 def oracle_action():
     bc = blockChain.get_instance()
-    zmq = ZMQ_Soc.get_instance()
     log.info(f'oracle: {bc.prev_vote} {bc.current_vote} {bc.vote_live} {bc.oracle_move} {bc.res_out}')
-    if len(zmq.sub_list) > 0:
-        if not bc.vote_live and (bc.current_vote == bc.prev_vote):
-            log.info('in vote not live')
-            bc.vote_status('open')
-            bc.oracle_move = True
-            # create vote open block with my ip and min open time
-            # as oracle wait for min open time to finish
-            # send close_vote
-            threading.Thread(target=countdown, args=(5,)).start()
-            # time.sleep(5)
-            # bc.vote_status('closed')
-            # consume all stubs, create release order
-            # send release_order   
-            return
-        elif bc.oracle_move and not bc.vote_live and (bc.current_vote > bc.prev_vote):
-            log.info(f'in vote broadcast {bc.release_order}')
-            if bc.release_order:
-                log.info('in release order')
-                random.shuffle(bc.release_order)
-                bc.broad_results(bc.release_order)
-            else:
-                log.info('in list only')
-                bc.broad_results([])
-            bc.res_out = True
-            bc.oracle_move = False
-            return
-        elif bc.res_out:
-            log.info('res out true')
-            if all_prev_vote_blocks_recvd():
-                log.info('in vote oracle')
-                # choose new oracle (New Oracle is XXX.XXX.XXX.XXX)
-                # needs to happen after
+    if not bc.vote_live and (bc.current_vote == bc.prev_vote):
+        log.info('in vote not live')
+        bc.vote_status('open')
+        bc.oracle_move = True
+        # create vote open block with my ip and min open time
+        # as oracle wait for min open time to finish
+        # send close_vote
+        threading.Thread(target=countdown, args=(5,)).start()
+        # time.sleep(5)
+        # bc.vote_status('closed')
+        # consume all stubs, create release order
+        # send release_order   
+        return
+    elif bc.oracle_move and not bc.vote_live and (bc.current_vote > bc.prev_vote):
+        log.info(f'in vote broadcast {bc.release_order}')
+        if bc.release_order:
+            log.info('in release order')
+            random.shuffle(bc.release_order)
+            bc.broad_results(bc.release_order)
+        else:
+            log.info('in list only')
+            bc.broad_results([])
+        bc.res_out = True
+        bc.oracle_move = False
+        return
+    elif bc.res_out:
+        log.info('res out true')
+        if all_prev_vote_blocks_recvd():
+            log.info('in vote oracle')
+            # choose new oracle (New Oracle is XXX.XXX.XXX.XXX)
+            # needs to happen after
 
-                pick_new_oracle()
-                bc.res_out = False
-                bc.oracle_move = False
-                bc.vote_live = False
-                bc.release_order = []
-                bc.prev_vote = bc.current_vote
-            return
+            pick_new_oracle()
+            bc.res_out = False
+            bc.oracle_move = False
+            bc.vote_live = False
+            bc.release_order = []
+            bc.prev_vote = bc.current_vote
+        return
 
 
 def next_move():
