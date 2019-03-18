@@ -112,7 +112,7 @@ def oracle_action():
         elif bc.oracle_move and not bc.vote_live:
             log.info(f'in vote broadcast {bc.release_order}')
             if bc.release_order:
-                bc.broad_results(random.shuffle(str(bc.release_order)))
+                bc.broad_results(str(random.shuffle(bc.release_order)))
             else:
                 bc.broad_results([])
             bc.res_out = True
