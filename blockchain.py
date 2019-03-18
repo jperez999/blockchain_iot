@@ -255,7 +255,8 @@ class blockChain(object):
             # open + 1, closed + 1, broadcast res + 1, start point + 1 = 4
             self.set_vote_start_block(int(start_block) + 4)
             # check if I have something and I am not oracle
-            if bq.queue_size() > 0:
+            queue_sz = bq.queue_size()
+            if queue_sz > 0:
                 self.send_stub()
             return True
         elif action == 'closed':
