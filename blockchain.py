@@ -101,7 +101,7 @@ class blockChain(object):
         if int(block.index) != 0 and int(block.index) != int(bc.blocks[-1].index) + 1:
             log.error("block incorrect index, consider refresh blocks")
             return
-        log.info("block's pkey: %s", (block.index, block.public_key))
+        # log.info("block's pkey: %s", (block.index, block.public_key))
         key = RSA.import_key(bytes.fromhex(block.public_key))
         # TODO create_hash for block
         # payload = str(block.index) + "_:_" + str(block.data)
@@ -308,6 +308,7 @@ class blockChain(object):
         self.broadcast_block('vote', f'{status}|_|{vote_num}_|_{self.current_block}')
 
     def broad_results(self, results):
+        log.info(results)
         self.broadcast_block('vote', f'results|_|{self.current_vote}_|_{str(results)}')
 
     def broadcast_block(self, sub_filter, payload):
