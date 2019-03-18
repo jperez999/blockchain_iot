@@ -328,7 +328,7 @@ class blockChain(object):
         zmq_obj = ZMQ_Soc.get_instance()
         block = BlockQueue.get_instance().pop_block()
         log.info(f'sending block, {block}')
-        zmq_obj.broadcast(str(block))
+        zmq_obj.broadcast(block)
 
     def consume(self, block):
         bc = blockChain.get_instance()

@@ -83,7 +83,7 @@ class ZMQ_Soc:
         return False
 
     def broadcast(self, payload):
-        log.info('setting payload to queue...')
+        log.info('setting payload...')
         sock = self.get_pub_sock()
         payload = args.my_topic + '#_|_#' + payload
         sock.send(payload.encode())
