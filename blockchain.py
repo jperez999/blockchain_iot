@@ -264,6 +264,7 @@ class blockChain(object):
         elif action == 'results':
             log.info(f'results from vote {value}')
             vote_num, res_list = value.split('_|_')
+            log.info(f'new broad list {res_list}')
             broad_list = json.loads(res_list)
             return self.process_results(broad_list)
             # vote results replace current broadcast
