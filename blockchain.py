@@ -233,7 +233,7 @@ class blockChain(object):
         zmq = ZMQ_Soc.get_instance()
         record = zmq.find_in_list(self.current_oracle)
         payload = {'p_key': self.public_key}
-        res = requests.post(f'http://{record.get("connect")}/stub', data=json.dumps(payload))
+        res = requests.post(f'http://{record.get("connect")}:9999/stub', data=json.dumps(payload))
         if res.status_code > 300:
             return False
         return True
