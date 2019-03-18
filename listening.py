@@ -112,7 +112,7 @@ def oracle_action():
         # consume all stubs, create release order
         # send release_order   
         return
-    elif bc.oracle_move and not bc.vote_live and (bc.current_vote > bc.prev_vote):
+    elif bc.oracle_move and not bc.vote_live and (int(bc.current_vote) > int(bc.prev_vote)):
         log.info(f'in vote broadcast {bc.release_order}')
         if bc.release_order:
             log.info('in release order')
