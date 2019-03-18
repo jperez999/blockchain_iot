@@ -70,6 +70,7 @@ def all_prev_vote_blocks_recvd():
 
 
 def pick_new_oracle():
+    log.info('picking new oracle')
     zmq = ZMQ_Soc.get_instance()
     bc = blockChain.get_instance()
     res = False
@@ -79,6 +80,7 @@ def pick_new_oracle():
             p_key = res.get('p_key')
         else:
             res = False
+    log.info('new oracle found')
     block = bc.gen_block('oracle', f'new|_|{p_key}')
     zmq.broadcast(str(block))
 
