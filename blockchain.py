@@ -244,6 +244,7 @@ class blockChain(object):
         return True
 
     def vote(self, payload):
+        bq = BlockQueue.get_instance()
         action, value = payload.split('|_|')
         if action == 'open':
             vote_num, start_block = value.split('_|_')
@@ -254,8 +255,8 @@ class blockChain(object):
             # open + 1, closed + 1, broadcast res + 1, start point + 1 = 4
             self.set_vote_start_block(int(start_block) + 4)
             # check if I have something and I am not oracle
-            # if bq.queue_size() > 0:
-            self.send_stub()
+            if bq.queue_size() > 0:
+                self.send_stub()
             return True
         elif action == 'closed':
             vote_num, start_block = value.split('_|_')
