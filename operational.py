@@ -110,6 +110,7 @@ def stubs():
     bc = blockChain.get_instance()
     if zmq.find_in_list(data.get('p_key')):
         if data.get('p_key') not in zmq.stubs_list:
+            log.info('adding key to release')
             bc.release_order.append(data.get('p_key'))
             return {}, 200
         else:
