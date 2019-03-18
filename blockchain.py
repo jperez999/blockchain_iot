@@ -310,7 +310,7 @@ class blockChain(object):
 
     def broad_results(self, results):
         log.info(results)
-        self.broadcast_block('vote', f'results|_|{self.current_vote}_|_{str(results)}')
+        self.broadcast_block('vote', f'results|_|{self.current_vote}_|_{json.dumps(results)}')
 
     def broadcast_block(self, sub_filter, payload):
         zmq_obj = ZMQ_Soc.get_instance()
