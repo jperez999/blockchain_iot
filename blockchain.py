@@ -281,7 +281,7 @@ class blockChain(object):
         for index, entry in enumerate(self.release_order):
             if entry == self.public_key:
                 log.info('found my slot')
-                self.broad_block_num = self.current_vote_start + 1 + index
+                self.broad_block_num = int(self.current_vote_start) + 1 + index
                 return True
         return False
 
