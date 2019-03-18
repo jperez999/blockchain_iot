@@ -99,7 +99,7 @@ def countdown(delay):
 def oracle_action():
     bc = blockChain.get_instance()
     log.info(f'oracle: {bc.prev_vote} {bc.current_vote} {bc.vote_live} {bc.oracle_move} {bc.res_out}')
-    if not bc.vote_live and (bc.current_vote == bc.prev_vote):
+    if not bc.vote_live and (int(bc.current_vote) == int(bc.prev_vote)):
         log.info('in vote not live')
         bc.vote_status('open')
         bc.oracle_move = True
