@@ -74,16 +74,16 @@ def pick_new_oracle():
     zmq = ZMQ_Soc.get_instance()
     bc = blockChain.get_instance()
     res = False
-    while(not res):
-        res = random.choice(zmq.sub_list)
-        if args.my_ip not in res.get('connect'):
-            log.info('got oracles')
-            p_key = res.get('p_key')
-        else:
-            log.info('bad oracles')
-            res = False
+    # while(not res):
+    res = random.choice(zmq.sub_list)
+    # if args.my_ip not in res.get('connect'):
+    #     log.info('got oracles')
+    #     p_key = res.get('p_key')
+    # else:
+    #     log.info('bad oracles')
+    #     res = False
     log.info('new oracle found')
-    block = bc.gen_block('oracle', f'new|_|{p_key}')
+    block = bc.gen_block('oracle', f'new|_|{res.get("p_key")}')
     zmq.broadcast(str(block))
 
 
