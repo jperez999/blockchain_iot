@@ -6,6 +6,7 @@ from state_machine import ZMQ_Soc, BlockQueue
 from Crypto.PublicKey import RSA
 from Crypto.Hash import SHA256
 from Crypto.Signature import pss
+import requests
 
 
 log = logging.getLogger()
@@ -227,7 +228,14 @@ class blockChain(object):
         log.info("data %s", (action, value))
         return True
 
+    def send_stub(self):
+        zmq = ZMQ_Soc.get_instance()
+        record = zmq.find_in_list(self.current_oracle)
+        payload = {'p_key': self.public_key}
+        requests.post(f'http://{record.get('connect')}/stub', data=json.dumps(payload))
+
     def vote(self, payload):
+        bq = BlockQueue.get_instance()
         action, value = payload.split('|_|')
         if action == 'open':
             vote_num, start_block = value.split('_|_')
@@ -236,6 +244,8 @@ class blockChain(object):
             self.set_vote_live(True)
             self.set_vote_start_block(start_block)
             # check if I have something and I am not oracle
+            if bq.queue_size() > 0:
+                self.send_stub()
             return True
         elif action == 'closed':
             vote_num, start_block = value.split('_|_')
