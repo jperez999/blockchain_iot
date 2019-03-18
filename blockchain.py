@@ -250,8 +250,8 @@ class blockChain(object):
             self.release_order = []
             self.set_current_vote(int(vote_num))
             self.set_vote_live(True)
-            # open + 1, closed + 1, broadcast res + 1, start point + 1 = 3
-            self.set_vote_start_block(int(start_block) + 3)
+            # open + 1, closed + 1, broadcast res + 1, start point + 1 = 4
+            self.set_vote_start_block(int(start_block) + 4)
             # check if I have something and I am not oracle
             # if bq.queue_size() > 0:
             self.send_stub()
