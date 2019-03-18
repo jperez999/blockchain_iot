@@ -105,7 +105,8 @@ def peers():
 # p_key=<p_key>
 @app.route('/stubs', methods=['POST'])
 def stubs():
-    data = request.json
+    data = request.get_json()
+    log.info(f'stubs req: {data}')
     zmq = ZMQ_Soc.get_instance()
     bc = blockChain.get_instance()
     if zmq.find_in_list(data.get('p_key')):
