@@ -277,7 +277,8 @@ class blockChain(object):
         # get my block index from the list, if have one
         log.info(f'got results for vote: {self.current_vote} {results}')
         self.release_order = list(results)
-        for index, entry in enumerate(results):
+        log.info(self.release_order)
+        for index, entry in enumerate(self.release_order):
             if entry == self.public_key:
                 log.info('found my slot')
                 self.broad_block_num = self.current_vote_start + 1 + index
