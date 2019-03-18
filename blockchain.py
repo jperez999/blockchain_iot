@@ -246,6 +246,7 @@ class blockChain(object):
         if action == 'open':
             vote_num, start_block = value.split('_|_')
             log.info(f'vote open {vote_num} {start_block}')
+            self.release_order = []
             self.set_current_vote(int(vote_num))
             self.set_vote_live(True)
             self.set_vote_start_block(start_block)
