@@ -122,6 +122,6 @@ class BlockQueue(object):
         return False
 
     def queue_size(self):
-        return self.block_queue.qsize
+        return self.block_queue.qsize()
 
 
