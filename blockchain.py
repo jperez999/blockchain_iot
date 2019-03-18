@@ -232,8 +232,11 @@ class blockChain(object):
     def send_stub(self):
         zmq = ZMQ_Soc.get_instance()
         record = zmq.find_in_list(self.current_oracle)
-        payload = {'p_key': self.public_key}
-        res = requests.post(f'http://{record.get("connect")}:9999/stub', data=json.dumps(payload))
+        payload = {}
+        payload['p_key'] = self.public_key
+        res = requests.post(f'http://{record.get("connect")}:9999/stub',
+                            headers={'Content-Type': 'application/json'},
+                            data=json.dumps(payload))
         if res.status_code > 300:
             return False
         return True
