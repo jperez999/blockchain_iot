@@ -124,12 +124,15 @@ def oracle_action():
             bc.oracle_move = False
             return
         elif bc.res_out:
-            log.info('in vote oracle')
-            # choose new oracle (New Oracle is XXX.XXX.XXX.XXX)
-            pick_new_oracle()
-            bc.res_out = False
-            bc.oracle_move = False
-            bc.vote_live = False
+            if all_prev_vote_blocks_recvd():
+                log.info('in vote oracle')
+                # choose new oracle (New Oracle is XXX.XXX.XXX.XXX)
+                # needs to happen after
+
+                pick_new_oracle()
+                bc.res_out = False
+                bc.oracle_move = False
+                bc.vote_live = False
             return
 
 
