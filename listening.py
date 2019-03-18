@@ -64,7 +64,7 @@ def i_am_oracle():
 
 def all_prev_vote_blocks_recvd():
     bc = blockChain.get_instance()
-    if bc.current_block == bc.vote_start_block + len(bc.release_order):
+    if int(bc.current_block) == int(bc.current_vote_start) + len(bc.release_order):
         return True
     return False
 
