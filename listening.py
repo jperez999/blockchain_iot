@@ -49,6 +49,7 @@ def get_index_release():
 
 def my_block_next():
     bc = blockChain.get_instance()
+    log.info(f'chekcing next block {bc.current_block} {bc.broad_block_num}')
     if int(bc.current_block) + 1 == int(bc.broad_block_num):
         # it is my turn broadcast it
         return True
