@@ -28,7 +28,6 @@ def parse_args():
 
 
 def broadcast_block(sub_filter, payload):
-    bc = blockChain.get_instance()
     # zmq_obj = ZMQ_Soc.get_instance()
     bq = BlockQueue.get_instance()
     payload = [f'{sub_filter}', f'{payload}']
@@ -110,7 +109,7 @@ def stubs():
     zmq = ZMQ_Soc.get_instance()
     bc = blockChain.get_instance()
     if zmq.find_in_list(data.get('p_key')):
-        if data.get('p_key') not in zmq.stubs_list:
+        if data.get('p_key') not in bc.release_order:
             log.info('adding key to release')
             bc.release_order.append(data.get('p_key'))
             return json.dumps({}), 200
