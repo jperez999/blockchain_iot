@@ -115,7 +115,7 @@ def oracle_action():
             else:
                 bc.broad_results([])
             bc.res_out = True
-            bc.oracle_move
+            bc.oracle_move = False
         elif bc.res_out:
             log.info('in vote oracle')
             # choose new oracle (New Oracle is XXX.XXX.XXX.XXX)
