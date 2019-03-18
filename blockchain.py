@@ -250,7 +250,8 @@ class blockChain(object):
             self.release_order = []
             self.set_current_vote(int(vote_num))
             self.set_vote_live(True)
-            self.set_vote_start_block(start_block)
+            # closed + 1, broadcast res + 1, start point + 1 = 3
+            self.set_vote_start_block(start_block + 3)
             # check if I have something and I am not oracle
             # if bq.queue_size() > 0:
             self.send_stub()
@@ -277,11 +278,12 @@ class blockChain(object):
         # get my block index from the list, if have one
         log.info(f'got results for vote: {self.current_vote} {results}')
         self.release_order = json.loads(results)
-        log.info(self.release_order)
+        # log.info(self.release_order)
         for index, entry in enumerate(self.release_order):
             if entry == self.public_key:
                 log.info('found my slot')
-                self.broad_block_num = int(self.current_vote_start) + 1 + index
+                # 2 comes from 1 for close 1 for broadcast
+                self.broad_block_num = int(self.current_vote_start) + index
                 return True
         return False
 
