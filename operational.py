@@ -107,9 +107,10 @@ def peers():
 def stubs():
     data = request.json
     zmq = ZMQ_Soc.get_instance()
+    bc = blockChain.get_instance()
     if zmq.find_in_list(data.get('p_key')):
         if data.get('p_key') not in zmq.stubs_list:
-            zmq.stubs_list.append(data.get('p_key'))
+            bc.release_order.append(data.get('p_key'))
             return {}, 200
         else:
             return {'error': 'already has a slot'}, 405

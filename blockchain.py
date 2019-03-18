@@ -57,6 +57,7 @@ class blockChain(object):
     # block number
     current_block = 0
     release_order = []
+    broad_block_num = 0
     res_out = False
     instance = None
     public_key = None
@@ -232,10 +233,12 @@ class blockChain(object):
         zmq = ZMQ_Soc.get_instance()
         record = zmq.find_in_list(self.current_oracle)
         payload = {'p_key': self.public_key}
-        requests.post(f'http://{record.get('connect')}/stub', data=json.dumps(payload))
+        res = requests.post(f'http://{record.get("connect")}/stub', data=json.dumps(payload))
+        if res.status_code > 300:
+            return False
+        return True
 
     def vote(self, payload):
-        bq = BlockQueue.get_instance()
         action, value = payload.split('|_|')
         if action == 'open':
             vote_num, start_block = value.split('_|_')
@@ -244,8 +247,8 @@ class blockChain(object):
             self.set_vote_live(True)
             self.set_vote_start_block(start_block)
             # check if I have something and I am not oracle
-            if bq.queue_size() > 0:
-                self.send_stub()
+            # if bq.queue_size() > 0:
+            self.send_stub()
             return True
         elif action == 'closed':
             vote_num, start_block = value.split('_|_')
@@ -259,8 +262,7 @@ class blockChain(object):
             log.info(f'results from vote {value}')
             vote_num, res_list = value.split('_|_')
             broad_list = json.loads(res_list)
-            self.process_results(broad_list)
-            return True
+            return self.process_results(broad_list)
             # vote results replace current broadcast
             # if something sent, check for my number
         log.error("vote filter not found %s", (action, value))
@@ -268,7 +270,13 @@ class blockChain(object):
 
     def process_results(self, results):
         # get my block index from the list, if have one
-        log.info('got results for vote: %s', self.current_vote)
+        log.info(f'got results for vote: {self.current_vote} {results}')
+        for index, entry in enumerate(results):
+            if entry == self.public_key:
+                log.info('found my slot')
+                self.broad_block_num = self.current_vote_start + 1 + index
+                return True
+        return False
 
     def reg_user(self, payload):
         zmq_soc = ZMQ_Soc.get_instance()

@@ -49,11 +49,9 @@ def get_index_release():
 
 def my_block_next():
     bc = blockChain.get_instance()
-    my_index = get_index_release()
-    if my_index:
-        if bc.current_block + 1 == my_index:
-            # it is my turn broadcast it
-            return True
+    if bc.current_block + 1 == bc.broad_block_num:
+        # it is my turn broadcast it
+        return True
     return False
 
 
@@ -66,7 +64,7 @@ def i_am_oracle():
 
 def all_prev_vote_blocks_recvd():
     bc = blockChain.get_instance()
-    if bc.current_block == bc.vote_start_block + len():
+    if bc.current_block == bc.vote_start_block + len(bc.release_order):
         return True
     return False
 
@@ -130,12 +128,11 @@ def oracle_action():
 
 def next_move():
     # grab state machine, and blockchain
-    bc = blockChain.get_instance()
     bq = BlockQueue.get_instance()
     zmq = ZMQ_Soc.get_instance()
     if my_block_next():
         log.info('Its my turn, sending...')
-        zmq.broadcast(bq.pop_block())
+        zmq.broadcast(str(bq.pop_block()))
     elif i_am_oracle():
         log.info('Oracle action check')
         oracle_action()
