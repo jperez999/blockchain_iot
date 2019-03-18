@@ -99,6 +99,7 @@ def countdown(delay):
 def oracle_action():
     bc = blockChain.get_instance()
     zmq = ZMQ_Soc.get_instance()
+    log.info(f'oracle: {bc.prev_vote} {bc.current_vote} {bc.vote_live} {bc.oracle_move} {bc.res_out}')
     if len(zmq.sub_list) > 0:
         if not bc.vote_live and (bc.current_vote == bc.prev_vote):
             log.info('in vote not live')
