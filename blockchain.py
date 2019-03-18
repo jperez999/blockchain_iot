@@ -46,7 +46,7 @@ class blockChain(object):
     master_file = "blockchain_key.pem"
     bc_k_file = "user_bc_key.pem"
     # vote number (i.e. seq id)
-    prev_vote = -1
+    prev_vote = 0
     current_vote = 0
     # block vote started at 
     current_vote_start = 0
