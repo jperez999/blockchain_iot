@@ -100,7 +100,7 @@ def oracle_action():
     bc = blockChain.get_instance()
     zmq = ZMQ_Soc.get_instance()
     if len(zmq.sub_list) > 0:
-        if not bc.vote_live and not bc.oracle_move and not bc.res_out:
+        if not bc.vote_live and (bc.current_vote == bc.prev_vote):
             log.info('in vote not live')
             bc.vote_status('open')
             bc.oracle_move = True
@@ -113,7 +113,7 @@ def oracle_action():
             # consume all stubs, create release order
             # send release_order   
             return
-        elif bc.oracle_move and not bc.vote_live:
+        elif bc.oracle_move and not bc.vote_live and not (bc.current_vote > bc.prev_vote):
             log.info(f'in vote broadcast {bc.release_order}')
             if bc.release_order:
                 log.info('in release order')
@@ -137,6 +137,7 @@ def oracle_action():
                 bc.oracle_move = False
                 bc.vote_live = False
                 bc.release_order = []
+                bc.prev_vote = bc.current_vote
             return
 
 
