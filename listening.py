@@ -98,7 +98,7 @@ def oracle_action():
     bc = blockChain.get_instance()
     zmq = ZMQ_Soc.get_instance()
     if len(zmq.sub_list) > 0:
-        if not bc.vote_live and not bc.oracle_move:
+        if not bc.vote_live and not bc.oracle_move and not bc.res_out:
             log.info('in vote not live')
             bc.vote_status('open')
             bc.oracle_move = True
