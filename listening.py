@@ -128,11 +128,10 @@ def oracle_action():
 
 def next_move():
     # grab state machine, and blockchain
-    bq = BlockQueue.get_instance()
-    zmq = ZMQ_Soc.get_instance()
+    bc = blockChain.get_instance()
     if my_block_next():
         log.info('Its my turn, sending...')
-        zmq.broadcast(str(bq.pop_block()))
+        bc.broad_block_queue()
     elif i_am_oracle():
         log.info('Oracle action check')
         oracle_action()

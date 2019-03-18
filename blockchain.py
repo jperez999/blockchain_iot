@@ -307,12 +307,16 @@ class blockChain(object):
         self.broadcast_block('vote', f'results|_|{self.current_vote}_|_{str(results)}')
 
     def broadcast_block(self, sub_filter, payload):
-        bc = blockChain.get_instance()
         zmq_obj = ZMQ_Soc.get_instance()
         # bq = BlockQueue.get_instance()
-        gen_block = bc.gen_block(f'{sub_filter}', f'{payload}')
+        gen_block = self.gen_block(f'{sub_filter}', f'{payload}')
         # bq.add_block(str(gen_block))
         zmq_obj.broadcast(str(gen_block))
+
+    def broad_block_queue(self):
+        zmq_obj = ZMQ_Soc.get_instance()
+        block = BlockQueue.get_instance().pop_block()
+        zmq_obj.broadcast(str(block))
 
     def consume(self, block):
         bc = blockChain.get_instance()

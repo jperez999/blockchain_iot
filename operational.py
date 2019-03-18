@@ -29,11 +29,11 @@ def parse_args():
 
 def broadcast_block(sub_filter, payload):
     bc = blockChain.get_instance()
-    zmq_obj = ZMQ_Soc.get_instance()
-    # bq = BlockQueue.get_instance()
+    # zmq_obj = ZMQ_Soc.get_instance()
+    bq = BlockQueue.get_instance()
     gen_block = bc.gen_block(f'{sub_filter}', f'{payload}')
-    # bq.add_block(str(gen_block))
-    zmq_obj.broadcast(str(gen_block))
+    bq.add_block(str(gen_block))
+    # zmq_obj.broadcast(str(gen_block))
 
 
 def reg_api(con_str, topic, p_key, sub_filter='hello'):
