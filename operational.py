@@ -31,8 +31,8 @@ def broadcast_block(sub_filter, payload):
     bc = blockChain.get_instance()
     # zmq_obj = ZMQ_Soc.get_instance()
     bq = BlockQueue.get_instance()
-    gen_block = bc.gen_block(f'{sub_filter}', f'{payload}')
-    bq.add_block(str(gen_block))
+    payload = [f'{sub_filter}', f'{payload}']
+    bq.add_block(payload)
     # zmq_obj.broadcast(str(gen_block))
 
 
