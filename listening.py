@@ -108,6 +108,7 @@ def oracle_action():
             # bc.vote_status('closed')
             # consume all stubs, create release order
             # send release_order   
+            return
         elif bc.oracle_move:
             log.info('in vote broadcast')
             if bc.release_order:
@@ -116,6 +117,7 @@ def oracle_action():
                 bc.broad_results([])
             bc.res_out = True
             bc.oracle_move = False
+            return
         elif bc.res_out:
             log.info('in vote oracle')
             # choose new oracle (New Oracle is XXX.XXX.XXX.XXX)
@@ -123,6 +125,7 @@ def oracle_action():
             bc.res_out = False
             bc.oracle_move = False
             bc.vote_live = False
+            return
 
 
 def next_move():
