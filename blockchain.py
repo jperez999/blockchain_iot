@@ -324,8 +324,10 @@ class blockChain(object):
         zmq_obj.broadcast(str(gen_block))
 
     def broad_block_queue(self):
+        log.info('broad from queue')
         zmq_obj = ZMQ_Soc.get_instance()
         block = BlockQueue.get_instance().pop_block()
+        log.info(f'sending block, {block.index}')
         zmq_obj.broadcast(str(block))
 
     def consume(self, block):
