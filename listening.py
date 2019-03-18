@@ -65,6 +65,7 @@ def i_am_oracle():
 
 def all_prev_vote_blocks_recvd():
     bc = blockChain.get_instance()
+    log.info(f'blocks check, {bc.current_block} {bc.current_vote_start} {len(bc.release_order)}')
     if int(bc.current_block) == int(bc.current_vote_start) + len(bc.release_order):
         return True
     return False
@@ -125,6 +126,7 @@ def oracle_action():
             bc.oracle_move = False
             return
         elif bc.res_out:
+            log.info('res out true')
             if all_prev_vote_blocks_recvd():
                 log.info('in vote oracle')
                 # choose new oracle (New Oracle is XXX.XXX.XXX.XXX)
