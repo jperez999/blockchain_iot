@@ -276,7 +276,7 @@ class blockChain(object):
     def process_results(self, results):
         # get my block index from the list, if have one
         log.info(f'got results for vote: {self.current_vote} {results}')
-        self.release_order = list(results)
+        self.release_order = json.loads(results)
         log.info(self.release_order)
         for index, entry in enumerate(self.release_order):
             if entry == self.public_key:
